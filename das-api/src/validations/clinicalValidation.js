@@ -8,6 +8,7 @@ import {
 } from "../utils/validation.js";
 
 export const treatmentRecordSchema = z.object({
+  visitNumber: z.coerce.number().int().min(1).max(100).default(1),
   vitalSigns: z
     .object({
       bloodPressure: z.string().optional(),

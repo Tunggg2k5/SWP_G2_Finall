@@ -21,6 +21,7 @@ export const createWorkingHourSchema = z.object({
 });
 
 export const updateWorkingHourSchema = z.object({
+  dayOfWeek: z.coerce.number().int().min(1).max(6).optional(),
   shiftName: nameSchema.optional(),
   startTime: timeSchema.optional(),
   endTime: timeSchema.optional(),
@@ -60,6 +61,7 @@ export const resetAdminUserPasswordSchema = z.object({
 
 export const updateAdminUserSchema = z.object({
   fullName: nameSchema.optional(),
+  email: optionalEmailSchema,
   phone: optionalPhoneSchema,
   status: z.enum(["active", "inactive", "locked"]).optional(),
   bio: noteSchema,

@@ -14,9 +14,9 @@
   align-items: center;
   justify-items: start;
   width: min(1200px, 100%);
-  min-height: 430px;
+  min-height: 360px;
   margin-inline: auto;
-  padding: clamp(44px, 7vw, 88px);
+  padding: clamp(34px, 6vw, 72px);
   text-align: left;
   background:
     linear-gradient(90deg, rgba(244, 248, 255, 0.98) 0%, rgba(244, 248, 255, 0.9) 42%, rgba(244, 248, 255, 0.35) 100%),
@@ -59,9 +59,9 @@
 }
 
 .patient-dark-hero h1 {
-  max-width: 620px;
-  font-size: clamp(2.4rem, 5vw, 4.4rem);
-  line-height: 1.08;
+  max-width: 560px;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1.12;
 }
 
 .patient-services-page {
@@ -87,19 +87,26 @@
 }
 
 .patient-dark-hero .patient-home-actions {
-  justify-content: center;
+  justify-content: flex-start;
+  margin-top: 18px;
 }
 
 .patient-dark-hero .button.primary {
-  min-height: 54px;
+  min-height: 48px;
   border-radius: 999px;
   padding-inline: 28px;
   background: #0b63ce;
   box-shadow: 0 16px 34px rgba(11, 99, 206, 0.26);
 }
 
+.patient-dark-hero .button.secondary {
+  min-height: 48px;
+  border-radius: 999px;
+  padding-inline: 24px;
+}
+
 .patient-dark-hero .button.ghost {
-  min-height: 54px;
+  min-height: 48px;
   border-color: #c6d8f6;
   border-radius: 999px;
   color: var(--primary-dark);

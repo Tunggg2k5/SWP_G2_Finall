@@ -1,4 +1,4 @@
-﻿import { env } from "../config/environment.js";
+import { env } from "../config/environment.js";
 import { getInheritanceChain } from "../config/roleHierarchy.js";
 import { comparePassword, hashPassword } from "../utils/password.js";
 import { sendPasswordResetOtp } from "../utils/mailer.js";
@@ -31,7 +31,7 @@ async function ensurePatientRole() {
       parentRoleName: "user",
       isAbstract: false,
       inheritanceChain: getInheritanceChain("patient"),
-      description: "Bá»‡nh nhÃ¢n Ä‘áº·t lá»‹ch trá»±c tuyáº¿n, xem lá»‹ch sá»­ khÃ¡m, há»§y hoáº·c dá»i lá»‹ch vÃ  Ä‘Ã¡nh giÃ¡ dá»‹ch vá»¥."
+      description: "Bệnh nhân đặt lịch trực tuyến, xem lịch sử khám, hủy hoặc dời lịch và đánh giá dịch vụ."
     }
   );
 }
@@ -40,19 +40,19 @@ export async function registerPatient(data) {
   const existing = await userRepository.findUserByPhone(data.phone);
 
   if (existing) {
-    throw httpError("Sá»‘ Ä‘iá»‡n thoáº¡i Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½.", 409);
+    throw httpError("Số điện thoại đã được đăng ký.", 409);
   }
 
   if (data.email) {
     const emailOwner = await userRepository.findUserByEmail(data.email);
     if (emailOwner) {
-      throw httpError("Email Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½.", 409);
+      throw httpError("Email đã được đăng ký.", 409);
     }
   }
 
   const patientRole = await ensurePatientRole();
   const user = await userRepository.createUser({
-    fullName: data.fullName || `Bá»‡nh nhÃ¢n ${data.phone}`,
+    fullName: data.fullName || `Bệnh nhân ${data.phone}`,
     email: data.email || undefined,
     phone: data.phone,
     gender: data.gender,
@@ -68,7 +68,7 @@ export async function registerPatient(data) {
   });
 
   return {
-    message: "ÄÄƒng kÃ½ tÃ i khoáº£n thÃ nh cÃ´ng. Vui lÃ²ng Ä‘Äƒng nháº­p báº±ng sá»‘ Ä‘iá»‡n thoáº¡i."
+    message: "Đăng ký tài khoản thành công. Vui lòng đăng nhập bằng số điện thoại."
   };
 }
 
@@ -76,11 +76,11 @@ export async function login(data) {
   const user = await userRepository.findUserByPhone(data.phone);
 
   if (!user || !(await comparePassword(data.password, user.passwordHash))) {
-    throw httpError("Sá»‘ Ä‘iá»‡n thoáº¡i hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.", 401);
+    throw httpError("Số điện thoại hoặc mật khẩu không đúng.", 401);
   }
 
   if (user.status !== "active") {
-    throw httpError("TÃ i khoáº£n Ä‘ang khÃ´ng hoáº¡t Ä‘á»™ng.", 403);
+    throw httpError("Tài khoản đang không hoạt động.", 403);
   }
 
   return {
@@ -122,12 +122,12 @@ export async function resetPassword(data) {
   const user = await userRepository.findUserByEmailWithResetFields(data.email);
 
   if (!user || !user.resetPasswordCodeHash || !user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()) {
-    throw httpError("MÃ£ xÃ¡c minh khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n.", 400);
+    throw httpError("Mã xác minh không hợp lệ hoặc đã hết hạn.", 400);
   }
 
   const isValidCode = await comparePassword(data.verificationCode, user.resetPasswordCodeHash);
   if (!isValidCode) {
-    throw httpError("MÃ£ xÃ¡c minh khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n.", 400);
+    throw httpError("Mã xác minh không hợp lệ hoặc đã hết hạn.", 400);
   }
 
   await userRepository.saveUser({
@@ -137,7 +137,7 @@ export async function resetPassword(data) {
     resetPasswordExpiresAt: null
   });
 
-  return { message: "ÄÃ£ Ä‘áº·t láº¡i máº­t kháº©u. Vui lÃ²ng Ä‘Äƒng nháº­p báº±ng máº­t kháº©u má»›i." };
+  return { message: "Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới." };
 }
 
 export function getCurrentUser(user) {
@@ -148,7 +148,7 @@ export async function updateProfile(user, data) {
   if (data.phone && data.phone !== user.phone) {
     const duplicate = await userRepository.findDuplicatePhone(data.phone, user._id);
     if (duplicate) {
-      throw httpError("Sá»‘ Ä‘iá»‡n thoáº¡i Ä‘Ã£ tá»“n táº¡i.", 409);
+      throw httpError("Số điện thoại đã tồn tại.", 409);
     }
   }
 
@@ -192,7 +192,7 @@ export async function markNotificationRead(user, notificationId) {
   const notification = await userRepository.markNotificationRead(user._id, notificationId);
 
   if (!notification) {
-    throw httpError("KhÃ´ng tÃ¬m tháº¥y thÃ´ng bÃ¡o.", 404);
+    throw httpError("Không tìm thấy thông báo.", 404);
   }
 
   return { notification };
@@ -217,7 +217,7 @@ export async function changePassword(user, data) {
   const storedUser = await userRepository.findUserByIdWithPassword(user._id);
 
   if (!(await comparePassword(data.currentPassword, storedUser.passwordHash))) {
-    throw httpError("Máº­t kháº©u hiá»‡n táº¡i khÃ´ng Ä‘Ãºng.", 400);
+    throw httpError("Mật khẩu hiện tại không đúng.", 400);
   }
 
   await userRepository.saveUser({
@@ -225,9 +225,9 @@ export async function changePassword(user, data) {
     passwordHash: await hashPassword(data.newPassword)
   });
 
-  return { message: "ÄÃ£ Ä‘á»•i máº­t kháº©u." };
+  return { message: "Đã đổi mật khẩu." };
 }
 
 export function logout() {
-  return { message: "ÄÃ£ Ä‘Äƒng xuáº¥t." };
+  return { message: "Đã đăng xuất." };
 }

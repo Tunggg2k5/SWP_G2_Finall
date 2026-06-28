@@ -51,9 +51,11 @@ export default function ClinicalPerformedServices({
             <span>{selectedAppointment.service?.name} / {selectedAppointment.room?.name}</span>
             <StatusBadge value={selectedAppointment.status} />
           </div>
-        ) : null}
+        ) : (
+          <EmptyState title="Chọn lịch khám" text="Dịch vụ đã thực hiện chỉ hiển thị sau khi y tá chọn một lịch khám cụ thể." />
+        )}
 
-        {services.length ? (
+        {selectedAppointment && services.length ? (
           <div className="mini-list performed-service-list">
             {services.map((service) => {
               const selected = selectedServices[service._id]?.selected || false;
@@ -79,44 +81,50 @@ export default function ClinicalPerformedServices({
               );
             })}
           </div>
-        ) : (
+        ) : selectedAppointment ? (
           <EmptyState title="Chưa có dịch vụ" text="Admin cần tạo dịch vụ trước khi y tá xác nhận chi phí." />
+        ) : null}
+
+        {selectedAppointment && (
+          <div className="stack">
+            {extraCosts.map((item, index) => (
+              <div className="form-grid" key={`extra-${index}`}>
+                <label className="field">
+                  <span>Chi phí khác</span>
+                  <input value={item.name} onChange={(event) => onExtraCostChange(index, "name", event.target.value)} />
+                </label>
+                <label className="field">
+                  <span>Số tiền</span>
+                  <input
+                    min="0"
+                    step="1000"
+                    type="number"
+                    value={item.amount}
+                    onChange={(event) => onExtraCostChange(index, "amount", event.target.value)}
+                  />
+                </label>
+                <button className="button small danger" type="button" onClick={() => onRemoveExtraCost(index)}>
+                  Xóa
+                </button>
+              </div>
+            ))}
+            <button className="button small ghost" type="button" onClick={onAddExtraCost}>
+              Thêm chi phí khác
+            </button>
+          </div>
         )}
 
-        <div className="stack">
-          {extraCosts.map((item, index) => (
-            <div className="form-grid" key={`extra-${index}`}>
-              <label className="field">
-                <span>Chi phí khác</span>
-                <input value={item.name} onChange={(event) => onExtraCostChange(index, "name", event.target.value)} />
-              </label>
-              <label className="field">
-                <span>Số tiền</span>
-                <input
-                  min="0"
-                  step="1000"
-                  type="number"
-                  value={item.amount}
-                  onChange={(event) => onExtraCostChange(index, "amount", event.target.value)}
-                />
-              </label>
-              <button className="button small danger" type="button" onClick={() => onRemoveExtraCost(index)}>
-                Xóa
-              </button>
-            </div>
-          ))}
-          <button className="button small ghost" type="button" onClick={onAddExtraCost}>
-            Thêm chi phí khác
-          </button>
-        </div>
+        {selectedAppointment && (
+          <div className="clinical-selected-card">
+            <strong>Tổng tiền: {formatMoney(total)}</strong>
+          </div>
+        )}
 
-        <div className="clinical-selected-card">
-          <strong>Tổng tiền: {formatMoney(total)}</strong>
-        </div>
-
-        <div className="row-actions clinical-treatment-actions">
-          <button className="button primary">Xác nhận</button>
-        </div>
+        {selectedAppointment && (
+          <div className="row-actions clinical-treatment-actions">
+            <button className="button primary">Xác nhận hoàn tất</button>
+          </div>
+        )}
       </form>
     </section>
   );

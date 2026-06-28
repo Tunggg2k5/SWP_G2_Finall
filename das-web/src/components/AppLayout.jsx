@@ -20,7 +20,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Feedback from "../components/Feedback.jsx";
 import { useAuth } from "../redux/AuthContext.jsx";
+import { clinicDateInput } from "../utils/appointmentSlots.js";
 import { api, getErrorMessage } from "../utils/api.js";
+import { todayInput } from "../utils/format.js";
 import { canUsePublicLookup, isClinicalRole } from "../utils/roles.js";
 import { firstError, validateEmail, validateName, validatePassword, validatePhone } from "../utils/validation.js";
 import ChangeUserPassword from "./user/ChangeUserPassword.jsx";
@@ -54,8 +56,7 @@ const dentistTabs = [
 const nurseTabs = [
   { id: "schedule", label: "Lịch khám", icon: Stethoscope },
   { id: "treatment", label: "Hồ sơ điều trị", icon: ClipboardPenLine },
-  { id: "performedServices", label: "Dịch vụ đã làm", icon: ReceiptText },
-  { id: "rooms", label: "Cập nhật phòng", icon: DoorOpen }
+  { id: "performedServices", label: "Dịch vụ đã làm", icon: ReceiptText }
 ];
 
 function navForRole(role) {
@@ -64,6 +65,7 @@ function navForRole(role) {
       { id: "home", to: "/dashboard?tab=home", label: "Trang chủ", icon: Home, isTab: true },
       { id: "booking", to: "/dashboard?tab=booking", label: "Đặt lịch", icon: CalendarPlus, isTab: true },
       { id: "appointments", to: "/dashboard?tab=appointments", label: "Lịch hẹn", icon: CalendarDays, isTab: true },
+      { id: "history", to: "/dashboard?tab=history", label: "Lịch sử lịch hẹn", icon: ClipboardList, isTab: true },
       { id: "records", to: "/dashboard?tab=records", label: "Hồ sơ điều trị", icon: FileText, isTab: true },
       { id: "invoices", to: "/dashboard?tab=invoices", label: "Hóa đơn", icon: ReceiptText, isTab: true }
     ];
@@ -91,6 +93,7 @@ export default function AppLayout() {
   const [profileForm, setProfileForm] = useState({ fullName: "", email: "", phone: "", gender: "unknown", address: "", bio: "" });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "" });
   const [feedback, setFeedback] = useState({ message: "", error: "" });
+  const [navBadges, setNavBadges] = useState({});
   const fileInputRef = useRef(null);
   const notificationButtonRef = useRef(null);
   const notificationPopoverRef = useRef(null);
@@ -113,7 +116,14 @@ export default function AppLayout() {
       bio: user.bio || ""
     });
     loadNotifications();
+    loadNavBadges(user.role);
   }, [user?._id, user?.fullName, user?.email, user?.phone, user?.gender, user?.address, user?.bio]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    const refresh = window.setInterval(() => loadNavBadges(user.role), 60000);
+    return () => window.clearInterval(refresh);
+  }, [user?._id, user?.role]);
 
   useEffect(() => {
     setShowNotifications(false);
@@ -254,6 +264,37 @@ export default function AppLayout() {
     }
   }
 
+  async function loadNavBadges(role) {
+    try {
+      const today = todayInput();
+      if (role === "receptionist") {
+        const res = await api.get("/reception/dashboard");
+        const appointments = res.data.appointments || [];
+        const consultations = res.data.consultations || [];
+        setNavBadges({
+          appointments: appointments.filter((item) => item.status === "pending").length,
+          schedule: appointments.filter(
+            (item) =>
+              ["scheduled", "confirmed", "checked_in", "in_treatment"].includes(item.status) &&
+              clinicDateInput(item.startAt) === today
+          ).length,
+          consultations: consultations.filter((item) => clinicDateInput(item.createdAt || item.preferredDate) === today).length
+        });
+        return;
+      }
+
+      if (role === "dentist" || role === "nurse") {
+        const res = await api.get("/clinical/dashboard", { params: { date: today } });
+        setNavBadges({ schedule: (res.data.appointments || []).length });
+        return;
+      }
+
+      setNavBadges({});
+    } catch (_error) {
+      setNavBadges({});
+    }
+  }
+
   async function deleteNotification(notification) {
     if (!notification?._id) return;
     const previousNotifications = notifications;
@@ -295,6 +336,7 @@ export default function AppLayout() {
         <nav className="top-nav-list" aria-label="Điều hướng chính">
           {items.map((item) => {
             const Icon = item.icon;
+            const badgeCount = navBadges[item.id] || 0;
             const active = item.isTab
               ? location.pathname === "/dashboard" &&
                 (item.section ? location.hash === `#${item.section}` : activeTab === item.id && location.hash !== "#services")
@@ -303,16 +345,28 @@ export default function AppLayout() {
               <Link
                 key={item.id}
                 to={item.to}
-                className={`top-nav-item ${active ? "active" : ""}`}
-                onClick={item.id === "home" ? scrollPageToTop : undefined}
+                className={`top-nav-item ${active ? "active" : ""} ${badgeCount > 0 ? "has-badge" : ""}`}
+                onClick={() => {
+                  if (item.id === "home") scrollPageToTop();
+                  if (user?.role) loadNavBadges(user.role);
+                }}
               >
                 <Icon size={17} />
                 <span>{item.label}</span>
+                {badgeCount > 0 && <em className="top-nav-badge">{badgeCount}</em>}
               </Link>
             ) : (
-              <NavLink key={item.to} to={item.to} className={({ isActive }) => `top-nav-item ${isActive ? "active" : ""}`}>
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => `top-nav-item ${isActive ? "active" : ""} ${badgeCount > 0 ? "has-badge" : ""}`}
+                onClick={() => {
+                  if (user?.role) loadNavBadges(user.role);
+                }}
+              >
                 <Icon size={17} />
                 <span>{item.label}</span>
+                {badgeCount > 0 && <em className="top-nav-badge">{badgeCount}</em>}
               </NavLink>
             );
           })}

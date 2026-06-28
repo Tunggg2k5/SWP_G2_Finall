@@ -1,4 +1,4 @@
-﻿import {
+import {
   closeMongoDB,
   connectMongoDB,
   getCollection
@@ -61,14 +61,14 @@ async function createWorkingCalendar() {
     workingHours.push(
       {
         dayOfWeek,
-        shiftName: "Ca sÃ¡ng",
+        shiftName: "Ca sáng",
         startTime: "08:00",
         endTime: "11:30",
         status: "active"
       },
       {
         dayOfWeek,
-        shiftName: "Ca chiá»u",
+        shiftName: "Ca chiều",
         startTime: "14:00",
         endTime: "17:30",
         status: "active"
@@ -83,26 +83,26 @@ async function createClinicSettings() {
     key: "public",
     clinicName: "SmileCare",
     hotline: "1900 8888",
-    address: "150 Hai BÃ  TrÆ°ng, Quáº­n 1, TP. Há»“ ChÃ­ Minh",
+    address: "150 Hai Bà Trưng, Quận 1, TP. Hồ Chí Minh",
     branches: [
       {
         id: "smilecare-q1",
-        province: "TP. Há»“ ChÃ­ Minh",
-        branch: "SmileCare Quáº­n 1 - 150 Hai BÃ  TrÆ°ng"
+        province: "TP. Hồ Chí Minh",
+        branch: "SmileCare Quận 1 - 150 Hai Bà Trưng"
       }
     ],
     faqs: [
       {
-        question: "TÃ´i cÃ³ thá»ƒ thay Ä‘á»•i lá»‹ch háº¹n sau khi Ä‘áº·t khÃ´ng?",
-        answer: "Báº¡n cÃ³ thá»ƒ thay Ä‘á»•i bÃ¡c sÄ©, ngÃ y hoáº·c slot khÃ¡m. Lá»‹ch thay Ä‘á»•i sáº½ Ä‘Æ°á»£c gá»­i láº¡i cho lá»… tÃ¢n xÃ¡c nháº­n."
+        question: "Tôi có thể thay đổi lịch hẹn sau khi đặt không?",
+        answer: "Bạn có thể thay đổi bác sĩ, ngày hoặc slot khám. Lịch thay đổi sẽ được gửi lại cho lễ tân xác nhận."
       },
       {
-        question: "Náº¿u tÃ´i khÃ´ng chá»n bÃ¡c sÄ© thÃ¬ sao?",
-        answer: "Lá»… tÃ¢n sáº½ sáº¯p xáº¿p bÃ¡c sÄ© vÃ  gá»­i thá»i gian khÃ¡m Ä‘Ã£ xÃ¡c nháº­n cho báº¡n."
+        question: "Nếu tôi không chọn bác sĩ thì sao?",
+        answer: "Lễ tân sẽ sắp xếp bác sĩ và gửi thời gian khám đã xác nhận cho bạn."
       },
       {
-        question: "TÃ´i cáº§n lÃ m gÃ¬ khi quÃªn máº­t kháº©u?",
-        answer: "Vui lÃ²ng sá»­ dá»¥ng má»¥c QuÃªn máº­t kháº©u Ä‘á»ƒ xem sá»‘ Ä‘iá»‡n thoáº¡i lá»… tÃ¢n vÃ  liÃªn há»‡ há»— trá»£."
+        question: "Tôi cần làm gì khi quên mật khẩu?",
+        answer: "Vui lòng sử dụng mục Quên mật khẩu để xem số điện thoại lễ tân và liên hệ hỗ trợ."
       }
     ]
   });
@@ -110,34 +110,34 @@ async function createClinicSettings() {
 
 const dentistProfiles = [
   {
-    fullName: "BS. Nguyá»…n Minh Anh",
+    fullName: "BS. Nguyễn Minh Anh",
     email: "dentist1@das.local",
     phone: "0902000001",
     yearsOfExperience: 9,
-    bio: "CÃ³ kinh nghiá»‡m thÄƒm khÃ¡m, tÆ° váº¥n káº¿ hoáº¡ch Ä‘iá»u trá»‹ vÃ  theo dÃµi tiáº¿n trÃ¬nh chÄƒm sÃ³c rÄƒng miá»‡ng cho bá»‡nh nhÃ¢n.",
+    bio: "Có kinh nghiệm thăm khám, tư vấn kế hoạch điều trị và theo dõi tiến trình chăm sóc răng miệng cho bệnh nhân.",
     avatarUrl: "/assets/doctors/doctor-minh-anh.png"
   },
   {
-    fullName: "BS. Tráº§n HoÃ ng Nam",
+    fullName: "BS. Trần Hoàng Nam",
     email: "dentist2@das.local",
     phone: "0902000002",
     yearsOfExperience: 12,
-    bio: "Phá»¥ trÃ¡ch thÄƒm khÃ¡m, tÆ° váº¥n phÆ°Æ¡ng Ã¡n Ä‘iá»u trá»‹ phÃ¹ há»£p vÃ  phá»‘i há»£p cÃ¹ng Ä‘á»™i ngÅ© lÃ¢m sÃ ng trong tá»«ng ca khÃ¡m.",
+    bio: "Phụ trách thăm khám, tư vấn phương án điều trị phù hợp và phối hợp cùng đội ngũ lâm sàng trong từng ca khám.",
     avatarUrl: "/assets/doctors/doctor-hoang-nam.png"
   },
   {
-    fullName: "BS. LÃª Thanh Vy",
+    fullName: "BS. Lê Thanh Vy",
     email: "dentist3@das.local",
     phone: "0902000003",
     yearsOfExperience: 7,
-    bio: "Táº­p trung vÃ o tráº£i nghiá»‡m thÄƒm khÃ¡m nháº¹ nhÃ ng, giáº£i thÃ­ch rÃµ káº¿ hoáº¡ch Ä‘iá»u trá»‹ vÃ  hÆ°á»›ng dáº«n chÄƒm sÃ³c sau khÃ¡m.",
+    bio: "Tập trung vào trải nghiệm thăm khám nhẹ nhàng, giải thích rõ kế hoạch điều trị và hướng dẫn chăm sóc sau khám.",
     avatarUrl: "/assets/doctors/doctor-thanh-vy.png"
   }
 ];
 
 async function seedUsers(roles, passwordHash) {
   const admin = await insertDocuments(COLLECTIONS.users, {
-    fullName: "Quáº£n trá»‹ SmileCare",
+    fullName: "Quản trị SmileCare",
     email: "admin@das.local",
     phone: "0900000000",
     role: "admin",
@@ -148,7 +148,7 @@ async function seedUsers(roles, passwordHash) {
   });
   await insertDocuments(COLLECTIONS.adminProfiles, {
     user: admin._id,
-    position: "Quáº£n trá»‹ há»‡ thá»‘ng phÃ²ng khÃ¡m",
+    position: "Quản trị hệ thống phòng khám",
     permissionLevel: "super_admin",
     status: "active"
   });
@@ -156,7 +156,7 @@ async function seedUsers(roles, passwordHash) {
   const receptionists = await insertDocuments(
     COLLECTIONS.users,
     Array.from({ length: 2 }, (_, index) => ({
-      fullName: `Lá»… tÃ¢n ${index + 1}`,
+      fullName: `Lễ tân ${index + 1}`,
       email: `receptionist${index + 1}@das.local`,
       phone: `090100000${index + 1}`,
       role: "receptionist",
@@ -186,7 +186,7 @@ async function seedUsers(roles, passwordHash) {
     COLLECTIONS.dentists,
     dentists.map((user, index) => ({
       user: user._id,
-      qualification: "BÃ¡c sÄ© RÄƒng HÃ m Máº·t",
+      qualification: "Bác sĩ Răng Hàm Mặt",
       experienceYears: dentistProfiles[index].yearsOfExperience,
       description: dentistProfiles[index].bio,
       status: "active"
@@ -196,7 +196,7 @@ async function seedUsers(roles, passwordHash) {
   const nurses = await insertDocuments(
     COLLECTIONS.users,
     Array.from({ length: 3 }, (_, index) => ({
-      fullName: `Y tÃ¡ ${index + 1}`,
+      fullName: `Y tá ${index + 1}`,
       email: `nurse${index + 1}@das.local`,
       phone: `090300000${index + 1}`,
       role: "nurse",
@@ -211,17 +211,17 @@ async function seedUsers(roles, passwordHash) {
     COLLECTIONS.nurses,
     nurses.map((user) => ({
       user: user._id,
-      qualification: "Y tÃ¡ Ä‘Ã£ Ä‘Äƒng kÃ½",
+      qualification: "Y tá đã đăng ký",
       status: "active"
     }))
   );
 
   const patientSamples = [
-    { fullName: "Nguyá»…n VÄƒn An", phone: "0911000001", gender: "male", address: "Quáº­n 1", medicalNote: "ChÆ°a ghi nháº­n dá»‹ á»©ng." },
-    { fullName: "Tráº§n Thá»‹ BÃ¬nh", phone: "0911000002", gender: "female", address: "Quáº­n 3", medicalNote: "Æ¯u tiÃªn lá»‹ch buá»•i chiá»u." },
-    { fullName: "LÃª Minh ChÃ¢u", phone: "0911000003", gender: "female", address: "Quáº­n BÃ¬nh Tháº¡nh", medicalNote: "Dá»‹ á»©ng Penicillin." },
-    { fullName: "Pháº¡m Quá»‘c DÅ©ng", phone: "0911000004", gender: "male", address: "ThÃ nh phá»‘ Thá»§ Äá»©c", medicalNote: "CÃ³ tiá»n sá»­ cao huyáº¿t Ã¡p." },
-    { fullName: "HoÃ ng Gia HÃ¢n", phone: "0911000005", gender: "female", address: "Quáº­n 7", medicalNote: "ChÆ°a ghi nháº­n bá»‡nh ná»n." }
+    { fullName: "Nguyễn Văn An", phone: "0911000001", gender: "male", address: "Quận 1", medicalNote: "Chưa ghi nhận dị ứng." },
+    { fullName: "Trần Thị Bình", phone: "0911000002", gender: "female", address: "Quận 3", medicalNote: "Ưu tiên lịch buổi chiều." },
+    { fullName: "Lê Minh Châu", phone: "0911000003", gender: "female", address: "Quận Bình Thạnh", medicalNote: "Dị ứng Penicillin." },
+    { fullName: "Phạm Quốc Dũng", phone: "0911000004", gender: "male", address: "Thành phố Thủ Đức", medicalNote: "Có tiền sử cao huyết áp." },
+    { fullName: "Hoàng Gia Hân", phone: "0911000005", gender: "female", address: "Quận 7", medicalNote: "Chưa ghi nhận bệnh nền." }
   ];
   const patients = await insertDocuments(
     COLLECTIONS.users,
@@ -253,8 +253,8 @@ async function seedUsers(roles, passwordHash) {
 async function seedClinic(dentists, nurses) {
   const services = await insertDocuments(COLLECTIONS.dentalServices, [
     {
-      name: "TrÃ¡m rÄƒng",
-      description: "Phá»¥c há»“i vÃ¹ng rÄƒng tá»•n thÆ°Æ¡ng vÃ  hÆ°á»›ng dáº«n chÄƒm sÃ³c sau Ä‘iá»u trá»‹.",
+      name: "Trám răng",
+      description: "Phục hồi vùng răng tổn thương và hướng dẫn chăm sóc sau điều trị.",
       durationMinutes: 30,
       transitionTime: 10,
       price: 300000,
@@ -263,8 +263,8 @@ async function seedClinic(dentists, nurses) {
       isActive: true
     },
     {
-      name: "Nhá»• rÄƒng khÃ´n",
-      description: "ThÄƒm khÃ¡m, cháº©n Ä‘oÃ¡n vÃ  thá»±c hiá»‡n nhá»• rÄƒng theo chá»‰ Ä‘á»‹nh cá»§a bÃ¡c sÄ©.",
+      name: "Nhổ răng khôn",
+      description: "Thăm khám, chẩn đoán và thực hiện nhổ răng theo chỉ định của bác sĩ.",
       durationMinutes: 60,
       transitionTime: 10,
       price: 1500000,
@@ -273,8 +273,8 @@ async function seedClinic(dentists, nurses) {
       isActive: true
     },
     {
-      name: "TÆ° váº¥n nha khoa",
-      description: "TÆ° váº¥n cho bá»‡nh nhÃ¢n chÆ°a xÃ¡c Ä‘á»‹nh rÃµ tÃ¬nh tráº¡ng rÄƒng miá»‡ng.",
+      name: "Tư vấn nha khoa",
+      description: "Tư vấn cho bệnh nhân chưa xác định rõ tình trạng răng miệng.",
       durationMinutes: 30,
       transitionTime: 10,
       price: 0,
@@ -283,8 +283,8 @@ async function seedClinic(dentists, nurses) {
       isActive: true
     },
     {
-      name: "Cáº¡o vÃ´i rÄƒng",
-      description: "LÃ m sáº¡ch máº£ng bÃ¡m, vÃ´i rÄƒng vÃ  hÆ°á»›ng dáº«n vá»‡ sinh rÄƒng miá»‡ng.",
+      name: "Cạo vôi răng",
+      description: "Làm sạch mảng bám, vôi răng và hướng dẫn vệ sinh răng miệng.",
       durationMinutes: 30,
       transitionTime: 10,
       price: 250000,
@@ -293,8 +293,8 @@ async function seedClinic(dentists, nurses) {
       isActive: true
     },
     {
-      name: "Táº©y tráº¯ng rÄƒng",
-      description: "Cáº£i thiá»‡n mÃ u rÄƒng theo tÃ¬nh tráº¡ng thá»±c táº¿ vÃ  chá»‰ Ä‘á»‹nh chuyÃªn mÃ´n.",
+      name: "Tẩy trắng răng",
+      description: "Cải thiện màu răng theo tình trạng thực tế và chỉ định chuyên môn.",
       durationMinutes: 45,
       transitionTime: 10,
       price: 1200000,
@@ -305,31 +305,31 @@ async function seedClinic(dentists, nurses) {
   ]);
 
   await getCollection(COLLECTIONS.dentalServices).updateMany(
-    { name: { $in: ["Trám răng", "TrÃ¡m rÄƒng"] } },
+    { name: { $in: ["Trám răng", "Trám răng"] } },
     { $set: { name: "Trám răng", price: "800000" } }
   );
   await getCollection(COLLECTIONS.dentalServices).updateMany(
-    { name: { $in: ["Nhổ răng khôn", "Nhá»• rÄƒng khÃ´n"] } },
+    { name: { $in: ["Nhổ răng khôn", "Nhổ răng khôn"] } },
     { $set: { name: "Nhổ răng", price: "1500000" } }
   );
   await getCollection(COLLECTIONS.dentalServices).updateMany(
-    { name: { $in: ["Tư vấn nha khoa", "TÆ° váº¥n nha khoa"] } },
+    { name: { $in: ["Tư vấn nha khoa", "Tư vấn nha khoa"] } },
     { $set: { name: "Tư vấn niềng răng", price: "500000", isConsultation: true } }
   );
   await getCollection(COLLECTIONS.dentalServices).updateMany(
-    { name: { $in: ["Cạo vôi răng", "Cáº¡o vÃ´i rÄƒng"] } },
+    { name: { $in: ["Cạo vôi răng", "Cạo vôi răng"] } },
     { $set: { name: "Cạo vôi răng", price: "500000" } }
   );
   await getCollection(COLLECTIONS.dentalServices).updateMany(
-    { name: { $in: ["Tẩy trắng răng", "Táº©y tráº¯ng rÄƒng"] } },
+    { name: { $in: ["Tẩy trắng răng", "Tẩy trắng răng"] } },
     { $set: { name: "Tẩy trắng răng", price: "2500000" } }
   );
   services.forEach((service) => {
-    if (["Trám răng", "TrÃ¡m rÄƒng"].includes(service.name)) Object.assign(service, { name: "Trám răng", price: "800000" });
-    if (["Nhổ răng khôn", "Nhá»• rÄƒng khÃ´n"].includes(service.name)) Object.assign(service, { name: "Nhổ răng", price: "1500000" });
-    if (["Tư vấn nha khoa", "TÆ° váº¥n nha khoa"].includes(service.name)) Object.assign(service, { name: "Tư vấn niềng răng", price: "500000", isConsultation: true });
-    if (["Cạo vôi răng", "Cáº¡o vÃ´i rÄƒng"].includes(service.name)) Object.assign(service, { name: "Cạo vôi răng", price: "500000" });
-    if (["Tẩy trắng răng", "Táº©y tráº¯ng rÄƒng"].includes(service.name)) Object.assign(service, { name: "Tẩy trắng răng", price: "2500000" });
+    if (["Trám răng", "Trám răng"].includes(service.name)) Object.assign(service, { name: "Trám răng", price: "800000" });
+    if (["Nhổ răng khôn", "Nhổ răng khôn"].includes(service.name)) Object.assign(service, { name: "Nhổ răng", price: "1500000" });
+    if (["Tư vấn nha khoa", "Tư vấn nha khoa"].includes(service.name)) Object.assign(service, { name: "Tư vấn niềng răng", price: "500000", isConsultation: true });
+    if (["Cạo vôi răng", "Cạo vôi răng"].includes(service.name)) Object.assign(service, { name: "Cạo vôi răng", price: "500000" });
+    if (["Tẩy trắng răng", "Tẩy trắng răng"].includes(service.name)) Object.assign(service, { name: "Tẩy trắng răng", price: "2500000" });
   });
   services.push(
     ...(await insertDocuments(COLLECTIONS.dentalServices, [
@@ -376,17 +376,17 @@ async function seedClinic(dentists, nurses) {
   const rooms = await insertDocuments(
     COLLECTIONS.clinicRooms,
     dentists.map((dentist, index) => ({
-      name: `PhÃ²ng khÃ¡m ${index + 1}`,
-      roomType: "PhÃ²ng Ä‘iá»u trá»‹ nha khoa",
-      description: "PhÃ²ng Ä‘iá»u trá»‹ Ä‘Æ°á»£c trang bá»‹ cho quy trÃ¬nh váº­n hÃ nh SmileCare.",
+      name: `Phòng khám ${index + 1}`,
+      roomType: "Phòng điều trị nha khoa",
+      description: "Phòng điều trị được trang bị cho quy trình vận hành SmileCare.",
       assignedDentist: dentist._id,
       assignedNurse: nurses[index]?._id,
       equipment: [
-        "MÃ¡y chá»¥p X-quang",
-        "MÃ¡y Ä‘o huyáº¿t Ã¡p",
-        "MÃ¡y Ä‘o SpO2",
-        "Nhiá»‡t káº¿",
-        "MÃ¡y theo dÃµi hÃ´ háº¥p"
+        "Máy chụp X-quang",
+        "Máy đo huyết áp",
+        "Máy đo SpO2",
+        "Nhiệt kế",
+        "Máy theo dõi hô hấp"
       ],
       status: "available",
       isActive: true
@@ -446,7 +446,7 @@ async function createSampleAppointment({
     status,
     paymentStatus: status === "completed" ? "unpaid" : "not_required",
     patientNote: note,
-    receptionistNote: status === "confirmed" ? "Lá»… tÃ¢n Ä‘Ã£ xÃ¡c nháº­n lá»‹ch háº¹n." : undefined
+    receptionistNote: status === "confirmed" ? "Lễ tân đã xác nhận lịch hẹn." : undefined
   });
 }
 
@@ -489,7 +489,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[0],
     time: "08:00",
     status: "pending",
-    note: "Äau nháº¹ rÄƒng hÃ m, chÆ°a chá»n bÃ¡c sÄ©.",
+    note: "Đau nhẹ răng hàm, chưa chọn bác sĩ.",
     dentistPreference: "random"
   });
   const pendingSelected = await createSampleAppointment({
@@ -500,7 +500,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[1],
     time: "10:00",
     status: "pending",
-    note: "Muá»‘n bÃ¡c sÄ© kiá»ƒm tra rÄƒng khÃ´n.",
+    note: "Muốn bác sĩ kiểm tra răng khôn.",
     dentistPreference: "selected"
   });
   const confirmed = await createSampleAppointment({
@@ -512,7 +512,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[0],
     time: "16:00",
     status: "confirmed",
-    note: "Lá»‹ch Ä‘Ã£ Ä‘Æ°á»£c lá»… tÃ¢n xÃ¡c nháº­n."
+    note: "Lịch đã được lễ tân xác nhận."
   });
   const confirmedForPatient = await createSampleAppointment({
     patient: patients[0],
@@ -523,7 +523,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[2],
     time: "10:00",
     status: "confirmed",
-    note: "TÃ¡i khÃ¡m vÃ  vá»‡ sinh rÄƒng."
+    note: "Tái khám và vệ sinh răng."
   });
   const checkedIn = await createSampleAppointment({
     patient: patients[1],
@@ -534,7 +534,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[0],
     time: "10:00",
     status: "checked_in",
-    note: "Bá»‡nh nhÃ¢n Ä‘Ã£ cÃ³ máº·t táº¡i phÃ²ng khÃ¡m.",
+    note: "Bệnh nhân đã có mặt tại phòng khám.",
     channel: "offline"
   });
   const inTreatment = await createSampleAppointment({
@@ -546,7 +546,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[0],
     time: "14:00",
     status: "in_treatment",
-    note: "Äang thá»±c hiá»‡n Ä‘iá»u trá»‹.",
+    note: "Đang thực hiện điều trị.",
     channel: "offline"
   });
   const rejected = await createSampleAppointment({
@@ -556,7 +556,7 @@ async function seedOperationalData(users, clinic) {
     date: workingDates[3],
     time: "14:00",
     status: "rejected",
-    note: "Lá»‹ch máº«u Ä‘Ã£ bá»‹ tá»« chá»‘i Ä‘á»ƒ kiá»ƒm tra tráº¡ng thÃ¡i.",
+    note: "Lịch mẫu đã bị từ chối để kiểm tra trạng thái.",
     dentistPreference: "random"
   });
   const completedOne = await createSampleAppointment({
@@ -568,7 +568,7 @@ async function seedOperationalData(users, clinic) {
     date: pastDates[0],
     time: "08:00",
     status: "completed",
-    note: "ÄÃ£ hoÃ n táº¥t cáº¡o vÃ´i rÄƒng.",
+    note: "Đã hoàn tất cạo vôi răng.",
     channel: "offline"
   });
   const completedTwo = await createSampleAppointment({
@@ -580,7 +580,7 @@ async function seedOperationalData(users, clinic) {
     date: pastDates[1],
     time: "10:00",
     status: "completed",
-    note: "ÄÃ£ hoÃ n táº¥t trÃ¡m rÄƒng.",
+    note: "Đã hoàn tất trám răng.",
     channel: "offline"
   });
   const completedThree = await createSampleAppointment({
@@ -592,7 +592,7 @@ async function seedOperationalData(users, clinic) {
     date: pastDates[2],
     time: "14:00",
     status: "completed",
-    note: "ÄÃ£ hoÃ n táº¥t táº©y tráº¯ng rÄƒng.",
+    note: "Đã hoàn tất tẩy trắng răng.",
     channel: "offline"
   });
   await createSampleAppointment({
@@ -604,7 +604,7 @@ async function seedOperationalData(users, clinic) {
     date: pastDates[3],
     time: "16:00",
     status: "no_show",
-    note: "Dá»¯ liá»‡u máº«u bá»‡nh nhÃ¢n váº¯ng máº·t.",
+    note: "Dữ liệu mẫu bệnh nhân vắng mặt.",
     channel: "offline"
   });
 
@@ -617,9 +617,9 @@ async function seedOperationalData(users, clinic) {
     patient: patients[0]._id,
     dentist: rooms[0].assignedDentist,
     nurse: rooms[0].assignedNurse,
-    diagnosis: "VÃ´i rÄƒng má»©c Ä‘á»™ trung bÃ¬nh.",
-    treatmentResult: "ÄÃ£ lÃ m sáº¡ch vÃ´i rÄƒng vÃ  Ä‘Ã¡nh bÃ³ng.",
-    treatmentNote: "HÆ°á»›ng dáº«n dÃ¹ng chá»‰ nha khoa háº±ng ngÃ y.",
+    diagnosis: "Vôi răng mức độ trung bình.",
+    treatmentResult: "Đã làm sạch vôi răng và đánh bóng.",
+    treatmentNote: "Hướng dẫn dùng chỉ nha khoa hằng ngày.",
     treatmentDate: completedOne.startAt,
     status: "completed"
   });
@@ -628,9 +628,9 @@ async function seedOperationalData(users, clinic) {
     patient: patients[1]._id,
     dentist: rooms[1].assignedDentist,
     nurse: rooms[1].assignedNurse,
-    diagnosis: "SÃ¢u rÄƒng hÃ m dÆ°á»›i.",
-    treatmentResult: "ÄÃ£ lÃ m sáº¡ch vÃ  trÃ¡m phá»¥c há»“i.",
-    treatmentNote: "Theo dÃµi Ãª buá»‘t trong 48 giá».",
+    diagnosis: "Sâu răng hàm dưới.",
+    treatmentResult: "Đã làm sạch và trám phục hồi.",
+    treatmentNote: "Theo dõi ê buốt trong 48 giờ.",
     treatmentDate: completedTwo.startAt,
     status: "completed"
   });
@@ -646,8 +646,8 @@ async function seedOperationalData(users, clinic) {
       temperature: "36.7",
       respiratoryRate: "18"
     },
-    diagnosis: "SÃ¢u rÄƒng cáº§n phá»¥c há»“i.",
-    treatmentResult: "Äang Ä‘iá»u trá»‹.",
+    diagnosis: "Sâu răng cần phục hồi.",
+    treatmentResult: "Đang điều trị.",
     treatmentDate: inTreatment.startAt,
     status: "active"
   });
@@ -656,7 +656,7 @@ async function seedOperationalData(users, clinic) {
     {
       treatmentRecord: recordOne._id,
       dentist: rooms[0].assignedDentist,
-      planDetail: "TÃ¡i khÃ¡m sau 6 thÃ¡ng vÃ  duy trÃ¬ vá»‡ sinh rÄƒng miá»‡ng.",
+      planDetail: "Tái khám sau 6 tháng và duy trì vệ sinh răng miệng.",
       estimatedCost: 0,
       startDate: completedOne.startAt,
       status: "active"
@@ -664,7 +664,7 @@ async function seedOperationalData(users, clinic) {
     {
       treatmentRecord: recordTwo._id,
       dentist: rooms[1].assignedDentist,
-      planDetail: "Kiá»ƒm tra miáº¿ng trÃ¡m sau 2 tuáº§n náº¿u cÃ²n Ãª buá»‘t.",
+      planDetail: "Kiểm tra miếng trám sau 2 tuần nếu còn ê buốt.",
       estimatedCost: 0,
       startDate: completedTwo.startAt,
       status: "active"
@@ -672,7 +672,7 @@ async function seedOperationalData(users, clinic) {
     {
       treatmentRecord: activeRecord._id,
       dentist: rooms[2].assignedDentist,
-      planDetail: "HoÃ n táº¥t trÃ¡m rÄƒng vÃ  Ä‘Ã¡nh giÃ¡ khá»›p cáº¯n.",
+      planDetail: "Hoàn tất trám răng và đánh giá khớp cắn.",
       estimatedCost: services[0].price,
       startDate: inTreatment.startAt,
       status: "active"
@@ -683,17 +683,17 @@ async function seedOperationalData(users, clinic) {
       treatmentRecord: recordTwo._id,
       dentist: rooms[1].assignedDentist,
       medicineName: "Paracetamol 500mg",
-      dosage: "1 viÃªn khi Ä‘au",
-      instruction: "KhÃ´ng dÃ¹ng quÃ¡ 3 viÃªn má»—i ngÃ y.",
-      note: "DÃ¹ng khi cáº§n."
+      dosage: "1 viên khi đau",
+      instruction: "Không dùng quá 3 viên mỗi ngày.",
+      note: "Dùng khi cần."
     },
     {
       treatmentRecord: activeRecord._id,
       dentist: rooms[2].assignedDentist,
-      medicineName: "NÆ°á»›c sÃºc miá»‡ng",
-      dosage: "2 láº§n má»—i ngÃ y",
-      instruction: "SÃºc miá»‡ng sau khi Ä‘Ã¡nh rÄƒng.",
-      note: "DÃ¹ng trong 7 ngÃ y."
+      medicineName: "Nước súc miệng",
+      dosage: "2 lần mỗi ngày",
+      instruction: "Súc miệng sau khi đánh răng.",
+      note: "Dùng trong 7 ngày."
     }
   ]);
 
@@ -706,7 +706,7 @@ async function seedOperationalData(users, clinic) {
       rating: 5,
       ratingDentist: 5,
       ratingService: 5,
-      comment: "BÃ¡c sÄ© tÆ° váº¥n rÃµ rÃ ng, thao tÃ¡c nháº¹ nhÃ ng."
+      comment: "Bác sĩ tư vấn rõ ràng, thao tác nhẹ nhàng."
     },
     {
       appointment: completedTwo._id,
@@ -716,7 +716,7 @@ async function seedOperationalData(users, clinic) {
       rating: 4,
       ratingDentist: 5,
       ratingService: 4,
-      comment: "Quy trÃ¬nh nhanh vÃ  nhÃ¢n viÃªn há»— trá»£ tá»‘t."
+      comment: "Quy trình nhanh và nhân viên hỗ trợ tốt."
     },
     {
       appointment: completedThree._id,
@@ -726,38 +726,38 @@ async function seedOperationalData(users, clinic) {
       rating: 5,
       ratingDentist: 5,
       ratingService: 5,
-      comment: "Káº¿t quáº£ tá»‘t vÃ  Ä‘Æ°á»£c hÆ°á»›ng dáº«n chÄƒm sÃ³c ká»¹."
+      comment: "Kết quả tốt và được hướng dẫn chăm sóc kỹ."
     }
   ]);
 
   await insertDocuments(COLLECTIONS.consultationRequests, [
     {
-      fullName: "Äá»— Minh Khang",
+      fullName: "Đỗ Minh Khang",
       phone: "0988000001",
       email: "khang@example.com",
       service: services[2]._id,
       preferredDate: combineDateAndTime(workingDates[1], "14:00"),
       preferredTime: "14:00",
-      message: "Muá»‘n tÆ° váº¥n Ä‘au rÄƒng trÆ°á»›c khi Ä‘áº·t lá»‹ch.",
+      message: "Muốn tư vấn đau răng trước khi đặt lịch.",
       status: "new"
     },
     {
-      fullName: "VÃµ Ngá»c Lan",
+      fullName: "Võ Ngọc Lan",
       phone: "0988000002",
       service: services[1]._id,
       preferredDate: combineDateAndTime(workingDates[2], "10:00"),
       preferredTime: "10:00",
-      message: "Cáº§n tÆ° váº¥n rÄƒng khÃ´n.",
+      message: "Cần tư vấn răng khôn.",
       status: "contacted",
       handledBy: receptionists[0]._id
     },
     {
-      fullName: "BÃ¹i Thanh Mai",
+      fullName: "Bùi Thanh Mai",
       phone: "0988000003",
       service: services[4]._id,
       preferredDate: combineDateAndTime(workingDates[3], "16:00"),
       preferredTime: "16:00",
-      message: "Quan tÃ¢m dá»‹ch vá»¥ táº©y tráº¯ng rÄƒng.",
+      message: "Quan tâm dịch vụ tẩy trắng răng.",
       status: "new"
     }
   ]);
@@ -765,26 +765,26 @@ async function seedOperationalData(users, clinic) {
   await insertDocuments(COLLECTIONS.notifications, [
     {
       user: patients[0]._id,
-      title: "Lá»‹ch háº¹n Ä‘ang chá» xÃ¡c nháº­n",
-      message: `YÃªu cáº§u ${services[0].name} Ä‘ang chá» lá»… tÃ¢n xÃ¡c nháº­n.`,
+      title: "Lịch hẹn đang chờ xác nhận",
+      message: `Yêu cầu ${services[0].name} đang chờ lễ tân xác nhận.`,
       isRead: false
     },
     {
       user: patients[0]._id,
-      title: "Lá»‹ch háº¹n Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n",
-      message: `Lá»‹ch ${services[3].name} Ä‘Ã£ Ä‘Æ°á»£c lá»… tÃ¢n xÃ¡c nháº­n.`,
+      title: "Lịch hẹn đã được xác nhận",
+      message: `Lịch ${services[3].name} đã được lễ tân xác nhận.`,
       isRead: false
     },
     {
       user: patients[1]._id,
-      title: "ÄÃ£ ghi nháº­n cÃ³ máº·t",
-      message: "Báº¡n Ä‘Ã£ Ä‘Æ°á»£c ghi nháº­n cÃ³ máº·t táº¡i SmileCare.",
+      title: "Đã ghi nhận có mặt",
+      message: "Bạn đã được ghi nhận có mặt tại SmileCare.",
       isRead: false
     },
     {
       user: patients[2]._id,
-      title: "Äang Ä‘iá»u trá»‹",
-      message: "Lá»‹ch khÃ¡m cá»§a báº¡n Ä‘Ã£ chuyá»ƒn sang tráº¡ng thÃ¡i Ä‘ang Ä‘iá»u trá»‹.",
+      title: "Đang điều trị",
+      message: "Lịch khám của bạn đã chuyển sang trạng thái đang điều trị.",
       isRead: true
     }
   ]);
@@ -804,7 +804,7 @@ async function seedOperationalData(users, clinic) {
       room: room._id,
       nurse: room.assignedNurse,
       availabilityStatus: roomStatuses[index],
-      note: "Tráº¡ng thÃ¡i phÃ²ng tá»« dá»¯ liá»‡u máº«u theo logic má»›i."
+      note: "Trạng thái phòng từ dữ liệu mẫu theo logic mới."
     }))
   );
 

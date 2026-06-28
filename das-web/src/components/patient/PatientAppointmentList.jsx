@@ -10,6 +10,7 @@ export default function PatientAppointmentList({
   canModifyAppointment,
   cancelAppointment,
   dentistOptions,
+  historyOnly = false,
   loading,
   rescheduleAppointment,
   rescheduleForms,
@@ -17,10 +18,10 @@ export default function PatientAppointmentList({
 }) {
   const [filterDate, setFilterDate] = useState("");
   const visibleAppointments = useMemo(() => {
-    return appointments
+    return (historyOnly ? appointmentHistory : appointments)
       .filter((appointment) => !filterDate || clinicDateInput(appointment.startAt) === filterDate)
       .sort(compareAppointmentsNewestFirst);
-  }, [appointments, filterDate]);
+  }, [appointmentHistory, appointments, filterDate, historyOnly]);
   const visibleHistory = useMemo(() => {
     return appointmentHistory
       .filter((appointment) => !filterDate || clinicDateInput(appointment.startAt) === filterDate)
@@ -31,7 +32,7 @@ export default function PatientAppointmentList({
     <section className="panel" id="appointments">
       <div className="section-title">
         <CalendarClock size={20} />
-        <h2>Lịch hẹn của tôi</h2>
+        <h2>{historyOnly ? "Lịch sử lịch hẹn" : "Lịch hẹn của tôi"}</h2>
       </div>
       <div className="toolbar-row patient-appointment-toolbar">
         <label className="field inline-field">
@@ -62,9 +63,12 @@ export default function PatientAppointmentList({
           ))}
         </div>
       ) : (
-        <EmptyState title="Chưa có lịch hẹn" text={filterDate ? "Không có lịch hẹn trong ngày đang lọc." : "Bạn có thể đặt lịch mới tại màn Đặt lịch."} />
+        <EmptyState
+          title={historyOnly ? "Chưa có lịch sử lịch hẹn" : "Chưa có lịch hẹn"}
+          text={filterDate ? "Không có lịch hẹn trong ngày đang lọc." : historyOnly ? "Các lịch đã hoàn tất, bị từ chối, hủy hoặc vắng mặt sẽ hiển thị tại đây." : "Bạn có thể đặt lịch mới tại màn Đặt lịch."}
+        />
       )}
-      {!loading && visibleHistory.length > 0 && (
+      {!historyOnly && !loading && visibleHistory.length > 0 && (
         <div className="appointment-history-section">
           <h3>Lịch sử lịch hẹn</h3>
           <div className="appointment-list">

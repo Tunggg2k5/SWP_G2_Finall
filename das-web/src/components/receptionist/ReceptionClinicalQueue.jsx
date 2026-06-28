@@ -6,19 +6,16 @@ import ReceptionAppointmentFilters from "./ReceptionAppointmentFilters.jsx";
 
 export default function ReceptionClinicalQueue({
   appointmentSearch,
-  applyScheduleStatus,
   date,
-  defaultStatusAction,
   dentistColumns,
   isLockedScheduleAppointment,
   loading,
+  onCheckInAppointment,
+  onMarkNoShow,
   queueSlots,
-  receptionStatusActionOptions,
   rooms,
   setAppointmentSearch,
-  setDate,
-  setStatusActions,
-  statusActions
+  setDate
 }) {
   return (
     <section className="panel reception-schedule-panel">
@@ -79,6 +76,8 @@ export default function ReceptionClinicalQueue({
                   {appointments.length ? (
                     appointments.map((appointment) => {
                       const locked = isLockedScheduleAppointment(appointment);
+                      const canCheckIn = !locked && ["scheduled", "confirmed"].includes(appointment.status);
+                      const canMarkNoShow = !locked && ["scheduled", "confirmed", "checked_in"].includes(appointment.status);
                       return (
                         <article className={`schedule-cell-card ${locked ? "locked" : ""}`} key={appointment._id}>
                           <div>
@@ -90,21 +89,21 @@ export default function ReceptionClinicalQueue({
                             {locked && <small>Lịch đã hủy hoặc bị từ chối, không thể đổi trạng thái.</small>}
                           </div>
                           <div className="row-actions schedule-status-actions">
-                            <select
-                              value={statusActions[appointment._id] || defaultStatusAction(appointment)}
-                              disabled={locked}
-                              onChange={(event) =>
-                                setStatusActions((current) => ({ ...current, [appointment._id]: event.target.value }))
-                              }
+                            <button
+                              className="button small"
+                              disabled={!canCheckIn}
+                              onClick={() => onCheckInAppointment(appointment)}
+                              type="button"
                             >
-                              {receptionStatusActionOptions.map((option) => (
-                                <option value={option.value} key={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                            <button className="button small" disabled={locked} onClick={() => applyScheduleStatus(appointment)}>
-                              Cập nhật
+                              Có mặt
+                            </button>
+                            <button
+                              className="button small danger"
+                              disabled={!canMarkNoShow}
+                              onClick={() => onMarkNoShow(appointment)}
+                              type="button"
+                            >
+                              Vắng mặt
                             </button>
                           </div>
                         </article>

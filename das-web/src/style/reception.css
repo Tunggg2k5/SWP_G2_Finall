@@ -105,13 +105,31 @@
 }
 
 .schedule-time-cell {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 5px;
   justify-content: center;
   padding: 12px 8px;
   background: #f9fbfc;
   color: var(--primary-dark);
   font-weight: 900;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.schedule-time-cell strong,
+.schedule-time-cell span {
+  display: block;
+  width: 100%;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.schedule-time-cell span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 780;
 }
 
 .schedule-cell {

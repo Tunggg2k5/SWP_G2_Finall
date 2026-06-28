@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ClipboardList, PhoneCall } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Feedback from "../components/Feedback.jsx";
 import BookAppointmentForPatientForm from "../components/receptionist/BookAppointmentForPatientForm.jsx";
@@ -8,25 +7,15 @@ import PatientAccountSearch from "../components/receptionist/PatientAccountSearc
 import ReceptionCheckInAppointments from "../components/receptionist/ReceptionCheckInAppointments.jsx";
 import ReceptionClinicalQueue from "../components/receptionist/ReceptionClinicalQueue.jsx";
 import ReceptionIntakeAppointments from "../components/receptionist/ReceptionIntakeAppointments.jsx";
-import ReceptionMetric from "../components/receptionist/ReceptionMetric.jsx";
 import { api, getErrorMessage } from "../utils/api.js";
 import { bookingSlotOptions, clinicDateInput, compareQueueWithinSlot, getAppointmentSlot } from "../utils/appointmentSlots.js";
 import { todayInput } from "../utils/format.js";
 import { firstError, requireValue, validateDate, validateName, validateNote, validatePhone } from "../utils/validation.js";
 import { maxBookingDate, toClinicIso } from "./BookingPage.jsx";
 
-const receptionStatusActionOptions = [
-  { value: "scheduled", label: "Chưa diễn ra" },
-  { value: "checked_in", label: "Có mặt" },
-  { value: "no_show", label: "Vắng mặt" },
-  { value: "in_treatment", label: "Đang khám" },
-  { value: "completed", label: "Hoàn tất" }
-];
-
 const intakeStatuses = new Set(["pending"]);
 const clinicalQueueStatuses = new Set(["scheduled", "confirmed", "checked_in", "in_treatment"]);
 const paymentStatuses = new Set(["completed"]);
-const statusActionValues = new Set(receptionStatusActionOptions.map((option) => option.value));
 const duplicateContactStatuses = new Set(["pending", "scheduled", "confirmed", "checked_in", "in_treatment"]);
 
 const genderOptions = [
@@ -56,7 +45,6 @@ export default function ReceptionistDashboard() {
   const [rescheduleSlots, setRescheduleSlots] = useState({});
   const [rescheduleSlotKeys, setRescheduleSlotKeys] = useState({});
   const [manualSchedules, setManualSchedules] = useState({});
-  const [statusActions, setStatusActions] = useState({});
   const [invoiceAmounts, setInvoiceAmounts] = useState({});
   const [paymentAmounts, setPaymentAmounts] = useState({});
   const [paymentMethods, setPaymentMethods] = useState({});
@@ -89,6 +77,10 @@ export default function ReceptionistDashboard() {
   useEffect(() => {
     load();
   }, [date]);
+
+  useEffect(() => {
+    load({ silent: true });
+  }, [activeFeature]);
 
   useEffect(() => {
     const tab = new URLSearchParams(location.search).get("tab");
@@ -202,26 +194,20 @@ export default function ReceptionistDashboard() {
     }
   }
 
-  async function applyScheduleStatus(appointment) {
+  async function checkInClinicalAppointment(appointment) {
     if (isLockedScheduleAppointment(appointment)) {
       setError("Lịch này đã hủy hoặc bị từ chối nên không thể thay đổi trạng thái.");
       return;
     }
 
-    const value = statusActions[appointment._id] || defaultStatusAction(appointment);
-    const updated = await updateAppointment(appointment._id, value);
-    if (updated) {
-      if (value === "completed") {
-        setMessage("Đã hoàn tất lịch khám. Lịch đã chuyển sang Hóa đơn.");
-        setActiveFeature("payments");
-        navigate("/dashboard?tab=payments", { replace: true });
-      } else if (value === "no_show") {
-        setMessage("Đã ghi nhận bệnh nhân vắng mặt.");
-      } else if (clinicalQueueStatuses.has(value)) {
-        setMessage("Đã cập nhật bệnh nhân vào lịch khám theo thứ tự.");
-        setActiveFeature("schedule");
-        navigate("/dashboard?tab=schedule", { replace: true });
-      }
+    if (!window.confirm("Xác nhận bệnh nhân đã có mặt tại quầy?")) return;
+
+    try {
+      await api.patch(`/appointments/${appointment._id}/check-in`, { paid: false });
+      setMessage("Đã check-in bệnh nhân. Lịch khám đã chuyển cho y tá và bác sĩ theo slot.");
+      await load();
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   }
 
@@ -260,6 +246,41 @@ export default function ReceptionistDashboard() {
       });
       setMessage("Đã tạo hóa đơn và gửi tới bệnh nhân.");
       setInvoiceAmounts((current) => ({ ...current, [appointment._id]: "" }));
+      load();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
+
+  async function editInvoice(appointment) {
+    const invoice = appointment.invoice;
+    if (!invoice) return;
+
+    const currentItems = (invoice.items || []).length
+      ? invoice.items
+      : [{ name: appointment.service?.name || "Dịch vụ nha khoa", amount: invoice.total || appointment.service?.price || 0 }];
+    const rawItems = window.prompt(
+      "Cập nhật hóa đơn, mỗi dòng theo dạng: Tên dịch vụ | Số tiền",
+      currentItems.map((item) => `${item.name || "Dịch vụ nha khoa"} | ${Number(item.amount || item.price || 0)}`).join("\n")
+    );
+    if (rawItems === null) return;
+
+    const items = rawItems
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [name, amount] = line.split("|").map((part) => part?.trim());
+        return { name: name || "Dịch vụ nha khoa", amount: Number(amount || 0) };
+      });
+    if (!items.length || items.some((item) => !item.name || item.amount <= 0)) {
+      setError("Mỗi dòng hóa đơn cần có tên dịch vụ và số tiền lớn hơn 0.");
+      return;
+    }
+
+    try {
+      await api.patch(`/appointments/${appointment._id}/invoice`, { items });
+      setMessage("Đã cập nhật hóa đơn.");
       load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -391,7 +412,6 @@ export default function ReceptionistDashboard() {
   const intakeAppointments = filteredBaseAppointments.filter((appointment) => intakeStatuses.has(appointment.status));
   const clinicalQueueAppointments = dateFilteredAppointments.filter((appointment) => clinicalQueueStatuses.has(appointment.status));
   const paymentAppointments = filteredBaseAppointments.filter((appointment) => paymentStatuses.has(appointment.status));
-  const consultationTodayCount = consultations.filter((item) => clinicDateInput(item.createdAt || item.preferredDate) === date).length;
   const patientKeyword = patientSearch.trim().toLowerCase();
   const selectablePatients = patients.filter((patient) => {
     if (!patientKeyword) return true;
@@ -443,12 +463,6 @@ export default function ReceptionistDashboard() {
     <div className="page-grid">
       <Feedback error={error} message={message} onClear={() => { setError(""); setMessage(""); }} />
 
-      <section className="metrics-grid reception-daily-metrics">
-        <ReceptionMetric icon={ClipboardList} label="Lịch hẹn hôm nay" value={intakeAppointments.length} />
-        <ReceptionMetric icon={CalendarDays} label="Lịch khám hôm nay" value={clinicalQueueAppointments.length} />
-        <ReceptionMetric icon={PhoneCall} label="Tư vấn hôm nay" value={consultationTodayCount} />
-      </section>
-
       {activeFeature === "appointments" && (
         <ReceptionIntakeAppointments
           appointmentSearch={appointmentSearch}
@@ -471,6 +485,7 @@ export default function ReceptionistDashboard() {
           checkInAppointments={paymentAppointments}
           date={date}
           generateInvoice={generateInvoice}
+          editInvoice={editInvoice}
           invoiceAmounts={invoiceAmounts}
           loading={loading}
           processPayment={processPayment}
@@ -487,19 +502,16 @@ export default function ReceptionistDashboard() {
       {activeFeature === "schedule" && (
         <ReceptionClinicalQueue
           appointmentSearch={appointmentSearch}
-          applyScheduleStatus={applyScheduleStatus}
           date={date}
-          defaultStatusAction={defaultStatusAction}
           dentistColumns={dentistColumns}
           isLockedScheduleAppointment={isLockedScheduleAppointment}
           loading={loading}
+          onCheckInAppointment={checkInClinicalAppointment}
+          onMarkNoShow={markNoShow}
           queueSlots={queueSlots}
-          receptionStatusActionOptions={receptionStatusActionOptions}
           rooms={rooms}
           setAppointmentSearch={setAppointmentSearch}
           setDate={setDate}
-          setStatusActions={setStatusActions}
-          statusActions={statusActions}
         />
       )}
 
@@ -607,10 +619,6 @@ function duplicateBookingInfo(appointment, appointments) {
     firstPatient: matches[0]?.patient?.fullName || "bệnh nhân đặt trước",
     shouldContact: matches.length > 1 && position > 0
   };
-}
-
-function defaultStatusAction(appointment) {
-  return statusActionValues.has(appointment.status) ? appointment.status : "scheduled";
 }
 
 function buildSlotKey(slot) {

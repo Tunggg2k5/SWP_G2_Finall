@@ -56,6 +56,7 @@
 }
 
 .top-nav-item {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -69,11 +70,35 @@
   white-space: nowrap;
 }
 
+.top-nav-item.has-badge {
+  padding-right: 28px;
+}
+
 .top-nav-item:hover,
 .top-nav-item.active {
   border-color: #c3e7eb;
   color: var(--primary-dark);
   background: var(--primary-soft);
+}
+
+.top-nav-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid #ffffff;
+  border-radius: 999px;
+  background: var(--secondary);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(240, 112, 40, 0.22);
 }
 
 .top-user-box {
@@ -344,10 +369,24 @@
 
 .account-modal {
   width: min(640px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: auto;
 }
 
 .account-form-grid {
   margin-bottom: 0;
+}
+
+.inline-check-field {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  align-content: center;
+  min-height: 52px;
+}
+
+.inline-check-field input {
+  width: 18px;
+  height: 18px;
 }
 
 .top-nav-content {

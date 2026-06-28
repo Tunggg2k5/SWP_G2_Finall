@@ -142,6 +142,10 @@ export function findAppointmentById(appointmentId) {
   return findById(COLLECTIONS.appointments, appointmentId);
 }
 
+export function findTreatmentRecordByAppointment(appointmentId) {
+  return findOne(COLLECTIONS.treatmentRecords, { appointment: toObjectId(appointmentId) });
+}
+
 export async function updateAppointment(appointmentId, data) {
   const appointment = await updateById(COLLECTIONS.appointments, appointmentId, data);
   await populate(appointment, clinicalAppointmentPopulate);

@@ -38,6 +38,7 @@ export default function PatientAppointmentCard({
 
   function openRescheduleForm() {
     updateRescheduleForm(appointment, {});
+    setCancelOpen(false);
     setRescheduleOpen(true);
   }
 
@@ -63,7 +64,13 @@ export default function PatientAppointmentCard({
         </div>
         {canModify ? (
           <div className="patient-appointment-actions">
-            <button className="button small danger" onClick={() => setCancelOpen((value) => !value)}>
+            <button
+              className="button small danger"
+              onClick={() => {
+                setCancelOpen((value) => !value);
+                setRescheduleOpen(false);
+              }}
+            >
               Hủy lịch
             </button>
             {!rescheduleOpen && (

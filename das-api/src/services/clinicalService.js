@@ -23,7 +23,10 @@ function sameId(left, right) {
 }
 
 function buildScheduleQuery(user, date, scopeByUser = true) {
-  const query = { status: { $in: ["scheduled", "confirmed", "checked_in", "in_treatment"] } };
+  const visibleStatuses = user.role === "admin"
+    ? ["scheduled", "confirmed", "checked_in", "in_treatment"]
+    : ["checked_in", "in_treatment"];
+  const query = { status: { $in: visibleStatuses } };
   if (scopeByUser && user.role === "dentist") query.dentist = user._id;
   if (scopeByUser && user.role === "nurse") query.nurse = user._id;
   if (date) {
@@ -59,6 +62,62 @@ function formatClinicDateTime(value) {
     minute: "2-digit",
     hourCycle: "h23"
   }).format(new Date(value));
+}
+
+function legacyVisitFromRecord(record) {
+  if (!record) return null;
+  const hasLegacyData = [
+    record.vitalSigns,
+    record.diagnosis,
+    record.treatmentResult,
+    record.treatmentNote,
+    record.treatmentPlan,
+    record.prescription,
+    record.aftercareInstructions
+  ].some(Boolean);
+  if (!hasLegacyData) return null;
+
+  return {
+    visitNumber: 1,
+    vitalSigns: record.vitalSigns || {},
+    diagnosis: record.diagnosis || "",
+    treatmentResult: record.treatmentResult || "",
+    treatmentNote: record.treatmentNote || "",
+    treatmentPlan: record.treatmentPlan || "",
+    prescription: record.prescription || "",
+    aftercareInstructions: record.aftercareInstructions || "",
+    updatedAt: record.updatedAt || record.treatmentDate || new Date()
+  };
+}
+
+function normalizeVisits(record) {
+  const visits = Array.isArray(record?.visits) ? record.visits.filter(Boolean) : [];
+  if (visits.length) {
+    return visits
+      .map((visit, index) => ({
+        ...visit,
+        visitNumber: Number(visit.visitNumber || index + 1)
+      }))
+      .sort((first, second) => first.visitNumber - second.visitNumber);
+  }
+  const legacyVisit = legacyVisitFromRecord(record);
+  return legacyVisit ? [legacyVisit] : [];
+}
+
+function buildVisitPayload(data, visitNumber, user) {
+  return {
+    visitNumber,
+    vitalSigns: data.vitalSigns || {},
+    diagnosis: data.diagnosis || "",
+    treatmentResult: data.treatmentResult || "",
+    treatmentNote: data.treatmentNote || "",
+    treatmentPlan: data.treatmentPlan || "",
+    prescription: data.prescription || "",
+    aftercareInstructions: data.aftercareInstructions || "",
+    estimatedCost: data.estimatedCost || 0,
+    updatedBy: user._id,
+    updatedAt: new Date()
+  };
 }
 
 async function assertPatientAccess(user, patientId) {
@@ -145,11 +204,32 @@ export async function upsertAppointmentTreatmentRecord(user, appointmentId, body
     throw createError("Chỉ nhân sự được phân công mới được cập nhật điều trị.", 403);
   }
 
+  const existingRecord = await clinicalRepository.findTreatmentRecordByAppointment(appointment._id);
+  const visitNumber = data.visitNumber || 1;
+  const visits = normalizeVisits(existingRecord);
+  if (visitNumber > visits.length + 1) {
+    throw createError(`Cần cập nhật lần ${visits.length + 1} trước khi cập nhật lần ${visitNumber}.`, 409);
+  }
+
+  const visitPayload = buildVisitPayload(data, visitNumber, user);
+  const existingVisitIndex = visits.findIndex((visit) => Number(visit.visitNumber) === visitNumber);
+  if (existingVisitIndex >= 0) {
+    visits[existingVisitIndex] = {
+      ...visits[existingVisitIndex],
+      ...visitPayload,
+      createdAt: visits[existingVisitIndex].createdAt || visits[existingVisitIndex].updatedAt || new Date()
+    };
+  } else {
+    visits.push({ ...visitPayload, createdAt: new Date() });
+  }
+  visits.sort((first, second) => first.visitNumber - second.visitNumber);
+
   const updateFields = {
     patient: appointment.patient,
     dentist: appointment.dentist,
     nurse: user.role === "nurse" ? user._id : appointment.nurse,
     treatmentDate: new Date(),
+    visits,
     status: "active"
   };
 

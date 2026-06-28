@@ -12,9 +12,13 @@ const dayNames = {
 };
 
 export default function ClinicWorkingHours({
+  editingWorkingHour,
   loading,
+  onCancelEditWorkingHour,
   onCreateWorkingHour,
   onDeleteWorkingHour,
+  onEditingWorkingHourChange,
+  onEditWorkingHour,
   onUpdateWorkingHour,
   onWorkingHourFormChange,
   workingHourForm,
@@ -85,7 +89,7 @@ export default function ClinicWorkingHours({
                       <StatusBadge value={item.status} />
                     </td>
                     <td>
-                      <button className="button small secondary" type="button" onClick={() => onUpdateWorkingHour(item)}>
+                      <button className="button small secondary" type="button" onClick={() => onEditWorkingHour(item)}>
                         Cập nhật
                       </button>
                       <button className="button small danger" type="button" onClick={() => onDeleteWorkingHour(item._id)}>
@@ -102,6 +106,53 @@ export default function ClinicWorkingHours({
         )}
       </section>
 
+      {editingWorkingHour && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" onMouseDown={(event) => event.currentTarget === event.target && onCancelEditWorkingHour()}>
+          <form className="account-modal panel" onSubmit={onUpdateWorkingHour}>
+            <div className="section-title">
+              <CalendarDays size={20} />
+              <h2>Cập nhật giờ làm</h2>
+            </div>
+            <div className="form-grid account-form-grid">
+              <label className="field">
+                <span>Ngày trong tuần</span>
+                <select value={editingWorkingHour.dayOfWeek} onChange={(event) => onEditingWorkingHourChange({ dayOfWeek: event.target.value })}>
+                  {Object.entries(dayNames).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Tên ca</span>
+                <input value={editingWorkingHour.shiftName} onChange={(event) => onEditingWorkingHourChange({ shiftName: event.target.value })} />
+              </label>
+              <label className="field">
+                <span>Bắt đầu</span>
+                <input type="time" value={editingWorkingHour.startTime} onChange={(event) => onEditingWorkingHourChange({ startTime: event.target.value })} />
+              </label>
+              <label className="field">
+                <span>Kết thúc</span>
+                <input type="time" value={editingWorkingHour.endTime} onChange={(event) => onEditingWorkingHourChange({ endTime: event.target.value })} />
+              </label>
+              <label className="field">
+                <span>Trạng thái</span>
+                <select value={editingWorkingHour.status} onChange={(event) => onEditingWorkingHourChange({ status: event.target.value })}>
+                  <option value="active">Hoạt động</option>
+                  <option value="inactive">Đã xóa</option>
+                </select>
+              </label>
+            </div>
+            <div className="row-actions">
+              <button className="button primary">Lưu cập nhật</button>
+              <button className="button ghost" type="button" onClick={onCancelEditWorkingHour}>
+                Hủy
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </>
   );
 }

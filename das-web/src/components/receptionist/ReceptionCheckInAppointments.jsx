@@ -16,6 +16,7 @@ export default function ReceptionCheckInAppointments({
   appointmentSearch,
   checkInAppointments,
   date,
+  editInvoice,
   generateInvoice,
   invoiceAmounts,
   loading,
@@ -204,6 +205,9 @@ export default function ReceptionCheckInAppointments({
                       <button className="button small secondary" type="button" onClick={() => processPayment(appointment)}>
                         Thanh toán
                       </button>
+                      <button className="button small ghost" type="button" onClick={() => editInvoice(appointment)}>
+                        Cập nhật hóa đơn
+                      </button>
                       <button className="button small ghost" type="button" onClick={() => exportInvoice(appointment)}>
                         Xuất hóa đơn
                       </button>
@@ -211,6 +215,9 @@ export default function ReceptionCheckInAppointments({
                   ) : (
                     <>
                       <span className="paid-complete-note">Đã thanh toán đủ</span>
+                      <button className="button small ghost" type="button" onClick={() => editInvoice(appointment)}>
+                        Cập nhật hóa đơn
+                      </button>
                       <button className="button small ghost" type="button" onClick={() => exportInvoice(appointment)}>
                         Xuất hóa đơn
                       </button>

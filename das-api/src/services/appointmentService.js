@@ -275,6 +275,33 @@ export async function updateAppointmentStatus(appointmentId, user, body) {
   if (!appointment) throw createError("Không tìm thấy lịch hẹn.", 404);
 
   assertAppointmentCanChange(appointment, user);
+  if (user.role === "nurse") {
+    if (!sameId(appointment.nurse, user._id)) {
+      throw createError("Y tá chỉ được cập nhật lịch khám được phân công.", 403);
+    }
+    if (!["in_treatment", "completed"].includes(data.status)) {
+      throw createError("Y tá chỉ được chuyển trạng thái đang khám hoặc hoàn tất.", 403);
+    }
+  }
+  if (user.role === "receptionist" && ["in_treatment", "completed"].includes(data.status)) {
+    throw createError("Lễ tân chỉ check-in hoặc ghi nhận vắng mặt, không hoàn tất lịch khám.", 403);
+  }
+  if (data.status === "in_treatment" && appointment.status !== "checked_in") {
+    throw createError("Cần check-in bệnh nhân trước khi chuyển sang đang khám.", 409);
+  }
+  if (data.status === "completed") {
+    const performedTotal = Number(appointment.performedTotal || 0);
+    const hasPerformedServices =
+      performedTotal > 0 ||
+      (appointment.performedServices || []).length > 0 ||
+      (appointment.extraCosts || []).length > 0;
+    if (appointment.status !== "in_treatment") {
+      throw createError("Chỉ có thể hoàn tất lịch đang khám.", 409);
+    }
+    if (!hasPerformedServices) {
+      throw createError("Cần xác nhận dịch vụ đã thực hiện và tổng tiền trước khi hoàn tất.", 409);
+    }
+  }
   if (
     ["checked_in", "in_treatment", "completed"].includes(data.status) &&
     ["pending", "waitlisted", "rejected"].includes(appointment.status)
@@ -463,6 +490,41 @@ export async function createInvoiceForAppointment(appointmentId, body) {
   });
 
   return invoice;
+}
+
+export async function updateInvoiceForAppointment(appointmentId, body) {
+  const data = createAppointmentInvoiceSchema.parse(body || {});
+  const appointment = await appointmentRepository.findAppointmentWithService(appointmentId);
+  if (!appointment) throw createError("Không tìm thấy lịch hẹn.", 404);
+
+  const invoice = await appointmentRepository.findInvoiceByAppointment(appointment._id);
+  if (!invoice) {
+    throw createError("Lịch khám này chưa có hóa đơn để cập nhật.", 404);
+  }
+
+  const invoiceItems = data.items?.length
+    ? data.items
+    : [{ name: appointment.service?.name || "Dịch vụ nha khoa", amount: Number(data.amount || invoice.total || 0) }];
+  const total = invoiceItems.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  if (total <= 0) {
+    throw createError("Tổng tiền hóa đơn phải lớn hơn 0.", 400);
+  }
+
+  const paidAmount = Number(invoice.paidAmount || 0);
+  if (paidAmount > total) {
+    throw createError("Tổng tiền mới không được nhỏ hơn số tiền bệnh nhân đã thanh toán.", 400);
+  }
+
+  invoice.items = invoiceItems;
+  invoice.total = total;
+  invoice.totalAmount = total;
+  invoice.status = paidAmount >= total ? "paid" : paidAmount > 0 ? "partial" : "unpaid";
+  invoice.paidAt = invoice.status === "paid" ? (invoice.paidAt || new Date()) : undefined;
+  await appointmentRepository.saveInvoice(invoice);
+
+  appointment.paymentStatus = invoice.status;
+  await appointmentRepository.saveAppointment(appointment);
+  return appointmentRepository.findInvoiceByAppointment(appointment._id);
 }
 
 export async function processAppointmentPayment(appointmentId, body) {

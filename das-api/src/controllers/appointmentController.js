@@ -54,6 +54,11 @@ export async function createInvoiceForAppointment(req, res) {
   res.status(201).json({ invoice });
 }
 
+export async function updateInvoiceForAppointment(req, res) {
+  const invoice = await appointmentService.updateInvoiceForAppointment(req.params.id, req.body);
+  res.json({ invoice });
+}
+
 export async function processAppointmentPayment(req, res) {
   res.json(await appointmentService.processAppointmentPayment(req.params.id, req.body));
 }

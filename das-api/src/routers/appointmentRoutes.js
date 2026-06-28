@@ -13,6 +13,7 @@ import {
   recordConfirmationCall,
   rescheduleAppointment,
   scheduleByReception,
+  updateInvoiceForAppointment,
   updateAppointmentStatus
 } from "../controllers/appointmentController.js";
 import { authorize, requireAuth } from "../middlewares/auth.js";
@@ -33,6 +34,7 @@ router.patch("/:id/confirmation-call", authorize("receptionist", "admin"), recor
 router.patch("/:id/check-in", authorize("receptionist", "admin"), checkInAppointment);
 router.patch("/:id/no-show", authorize("receptionist", "admin"), markNoShow);
 router.post("/:id/invoice", authorize("receptionist", "admin"), createInvoiceForAppointment);
+router.patch("/:id/invoice", authorize("receptionist", "admin"), updateInvoiceForAppointment);
 router.patch("/:id/payment", authorize("receptionist", "admin"), processAppointmentPayment);
 router.get("/:id/invoice", getAppointmentInvoice);
 

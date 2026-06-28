@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ClipboardPenLine } from "lucide-react";
 import StatusBadge from "../StatusBadge.jsx";
 import { formatDateTime } from "../../utils/format.js";
@@ -10,6 +10,8 @@ export default function ClinicalTreatmentForm({
   onSubmit,
   records = [],
   selectedAppointment,
+  selectedRecord,
+  treatmentVisits = [],
   user
 }) {
   const isNurse = user?.role === "nurse";
@@ -25,19 +27,39 @@ export default function ClinicalTreatmentForm({
     return records
       .filter((record) => {
         const patientId = record.patient?._id || record.patient;
-        const bySelectedAppointment = selectedPatientId ? patientId?.toString?.() === selectedPatientId?.toString?.() : true;
+        const bySelectedAppointment = selectedPatientId ? patientId?.toString?.() === selectedPatientId?.toString?.() : false;
         if (!keyword) return bySelectedAppointment;
         const name = record.patient?.fullName?.toLowerCase?.() || "";
         const phone = record.patient?.phone?.toLowerCase?.() || "";
-        return name.includes(keyword) || phone.includes(keyword);
+        const matchesKeyword = name.includes(keyword) || phone.includes(keyword);
+        return selectedPatientId ? matchesKeyword && bySelectedAppointment : matchesKeyword;
       })
       .sort((first, second) => new Date(second.treatmentDate || second.updatedAt || 0) - new Date(first.treatmentDate || first.updatedAt || 0));
   }, [dentistSearch, records, selectedPatientId]);
   const activeRecord = dentistRecords[Math.min(activeRecordIndex, Math.max(dentistRecords.length - 1, 0))];
+  const dentistVisits = useMemo(() => normalizeRecordVisits(activeRecord), [activeRecord]);
+  const activeDentistVisit = dentistVisits.find((visit) => visit.visitNumber === activeVisit) || dentistVisits[dentistVisits.length - 1];
+  const activeNurseVisit = treatmentVisits.find((visit) => visit.visitNumber === Number(form.visitNumber));
+  const visibleVisitCount = Math.max(visitCount, treatmentVisits.length + 1, 5);
+  const nextAllowedVisit = treatmentVisits.length + 1;
+
+  useEffect(() => {
+    setActiveVisit(Number(form.visitNumber || 1));
+  }, [form.visitNumber]);
+
+  useEffect(() => {
+    if (isDentist && dentistVisits.length) {
+      setActiveVisit(dentistVisits[dentistVisits.length - 1].visitNumber);
+    }
+  }, [activeRecord?._id, dentistVisits.length, isDentist]);
 
   function addVisitPage() {
     setVisitCount((current) => current + 1);
-    setActiveVisit(visitCount + 1);
+  }
+
+  function chooseVisit(visitNumber) {
+    setActiveVisit(visitNumber);
+    onChange("visitNumber", visitNumber);
   }
 
   return (
@@ -82,35 +104,54 @@ export default function ClinicalTreatmentForm({
             </label>
             {dentistRecords.length ? (
               <>
-                <div className="treatment-page-tabs">
-                  {dentistRecords.map((record, index) => (
+                {!selectedPatientId && dentistRecords.length > 1 && (
+                  <div className="treatment-page-tabs">
+                    {dentistRecords.map((record, index) => (
+                      <button
+                        className={index === Math.min(activeRecordIndex, dentistRecords.length - 1) ? "active" : ""}
+                        key={record._id || index}
+                        onClick={() => {
+                          setActiveRecordIndex(index);
+                          setActiveVisit(1);
+                        }}
+                        type="button"
+                      >
+                        {record.patient?.fullName || "Bệnh nhân"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {dentistVisits.length ? (
+                  <div className="treatment-page-tabs">
+                    {dentistVisits.map((visit) => (
                     <button
-                      className={index === Math.min(activeRecordIndex, dentistRecords.length - 1) ? "active" : ""}
-                      key={record._id || index}
-                      onClick={() => setActiveRecordIndex(index)}
+                      className={visit.visitNumber === activeVisit ? "active" : ""}
+                      key={`${activeRecord?._id}-visit-${visit.visitNumber}`}
+                      onClick={() => setActiveVisit(visit.visitNumber)}
                       type="button"
                     >
-                      Lần {dentistRecords.length - index}
+                      Lần {visit.visitNumber}
                     </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="readonly-record-grid">
                   <div className="clinical-selected-card wide">
                     <strong>{activeRecord.patient?.fullName || "Bệnh nhân"}</strong>
                     <span>{activeRecord.patient?.phone || "Chưa có SĐT"}</span>
-                    <span>{formatDateTime(activeRecord.treatmentDate || activeRecord.updatedAt)}</span>
+                    <span>Cập nhật: {formatDateTime(activeDentistVisit?.updatedAt || activeRecord.updatedAt)}</span>
                   </div>
-                  <ReadOnlyField label="Huyết áp" value={activeRecord.vitalSigns?.bloodPressure} />
-                  <ReadOnlyField label="Nhịp tim" value={activeRecord.vitalSigns?.heartRate} />
-                  <ReadOnlyField label="SpO2" value={activeRecord.vitalSigns?.spo2} />
-                  <ReadOnlyField label="Nhiệt độ" value={activeRecord.vitalSigns?.temperature} />
-                  <ReadOnlyField label="Nhịp thở" value={activeRecord.vitalSigns?.respiratoryRate} />
-                  <ReadOnlyField label="Chẩn đoán" value={activeRecord.diagnosis} wide />
-                  <ReadOnlyField label="Điều trị đã thực hiện" value={activeRecord.treatmentResult} wide />
-                  <ReadOnlyField label="Đơn thuốc" value={activeRecord.prescription} wide />
-                  <ReadOnlyField label="Điều trị dự kiến" value={activeRecord.treatmentPlan} wide />
-                  <ReadOnlyField label="Hướng dẫn sau điều trị" value={activeRecord.aftercareInstructions} wide />
-                  <ReadOnlyField label="Ghi chú điều trị" value={activeRecord.treatmentNote} wide />
+                  <ReadOnlyField label="Huyết áp" value={activeDentistVisit?.vitalSigns?.bloodPressure} />
+                  <ReadOnlyField label="Nhịp tim" value={activeDentistVisit?.vitalSigns?.heartRate} />
+                  <ReadOnlyField label="SpO2" value={activeDentistVisit?.vitalSigns?.spo2} />
+                  <ReadOnlyField label="Nhiệt độ" value={activeDentistVisit?.vitalSigns?.temperature} />
+                  <ReadOnlyField label="Nhịp thở" value={activeDentistVisit?.vitalSigns?.respiratoryRate} />
+                  <ReadOnlyField label="Chẩn đoán" value={activeDentistVisit?.diagnosis} wide />
+                  <ReadOnlyField label="Điều trị đã thực hiện" value={activeDentistVisit?.treatmentResult} wide />
+                  <ReadOnlyField label="Đơn thuốc" value={activeDentistVisit?.prescription} wide />
+                  <ReadOnlyField label="Điều trị dự kiến" value={activeDentistVisit?.treatmentPlan} wide />
+                  <ReadOnlyField label="Hướng dẫn sau điều trị" value={activeDentistVisit?.aftercareInstructions} wide />
+                  <ReadOnlyField label="Ghi chú điều trị" value={activeDentistVisit?.treatmentNote} wide />
                 </div>
               </>
             ) : (
@@ -120,26 +161,32 @@ export default function ClinicalTreatmentForm({
               </div>
             )}
           </div>
-        ) : isNurse ? (
+        ) : isNurse && selectedAppointment ? (
           <div className="form-grid">
             <div className="treatment-page-tabs wide">
-              {Array.from({ length: visitCount }, (_, index) => (
-                <button
-                  className={activeVisit === index + 1 ? "active" : ""}
-                  key={index + 1}
-                  onClick={() => setActiveVisit(index + 1)}
-                  type="button"
-                >
-                  Lần {index + 1}
-                </button>
-              ))}
+              {Array.from({ length: visibleVisitCount }, (_, index) => {
+                const visitNumber = index + 1;
+                const disabled = visitNumber > nextAllowedVisit;
+                return (
+                  <button
+                    className={Number(form.visitNumber) === visitNumber ? "active" : ""}
+                    disabled={disabled}
+                    key={visitNumber}
+                    onClick={() => chooseVisit(visitNumber)}
+                    title={disabled ? `Cần cập nhật lần ${nextAllowedVisit} trước` : undefined}
+                    type="button"
+                  >
+                    Lần {visitNumber}
+                  </button>
+                );
+              })}
               <button className="add-page" onClick={addVisitPage} type="button">
                 +
               </button>
             </div>
             <div className="clinical-selected-card wide">
-              <strong>Trang {activeVisit}</strong>
-              <span>{activeVisit === 1 ? "Lần điều trị đầu tiên" : `Lần điều trị ${activeVisit}`}</span>
+              <strong>Lần {form.visitNumber}</strong>
+              <span>{activeNurseVisit?.updatedAt ? `Cập nhật: ${formatDateTime(activeNurseVisit.updatedAt)}` : "Chưa cập nhật"}</span>
             </div>
             <label className="field">
               <span>Huyết áp</span>
@@ -185,6 +232,11 @@ export default function ClinicalTreatmentForm({
               <span>Hướng dẫn sau điều trị</span>
               <textarea disabled={isDentist} value={form.aftercareInstructions} onChange={(event) => onChange("aftercareInstructions", event.target.value)} rows="3" />
             </label>
+          </div>
+        ) : isNurse ? (
+          <div className="empty-state">
+            <strong>Chọn lịch khám</strong>
+            <span>Hồ sơ điều trị chỉ hiển thị sau khi y tá chọn một lịch khám của bệnh nhân.</span>
           </div>
         ) : (
           <>
@@ -261,4 +313,37 @@ function ReadOnlyField({ label, value, wide = false }) {
       <strong>{value || "Chưa cập nhật"}</strong>
     </div>
   );
+}
+
+function normalizeRecordVisits(record) {
+  if (!record) return [];
+  const visits = Array.isArray(record.visits) ? record.visits.filter(Boolean) : [];
+  if (visits.length) {
+    return visits
+      .map((visit, index) => ({ ...visit, visitNumber: Number(visit.visitNumber || index + 1) }))
+      .sort((first, second) => first.visitNumber - second.visitNumber);
+  }
+
+  const hasLegacyData = [
+    record.vitalSigns,
+    record.diagnosis,
+    record.treatmentResult,
+    record.treatmentNote,
+    record.treatmentPlan,
+    record.prescription,
+    record.aftercareInstructions
+  ].some(Boolean);
+  return hasLegacyData
+    ? [{
+        visitNumber: 1,
+        vitalSigns: record.vitalSigns || {},
+        diagnosis: record.diagnosis || "",
+        treatmentResult: record.treatmentResult || "",
+        treatmentNote: record.treatmentNote || "",
+        treatmentPlan: record.treatmentPlan || "",
+        prescription: record.prescription || "",
+        aftercareInstructions: record.aftercareInstructions || "",
+        updatedAt: record.updatedAt || record.treatmentDate
+      }]
+    : [];
 }

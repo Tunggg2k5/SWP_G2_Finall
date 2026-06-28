@@ -4,9 +4,13 @@ import StatusBadge from "../StatusBadge.jsx";
 
 export default function ClinicRoomManagement({
   dentistUsers,
+  editingRoom,
   loading,
   nurseUsers,
+  onCancelEditRoom,
   onCreateRoom,
+  onEditingRoomChange,
+  onEditRoom,
   onDeleteRoom,
   onRoomFormChange,
   onUpdateRoom,
@@ -73,7 +77,7 @@ export default function ClinicRoomManagement({
               <span>{room.assignedNurse?.fullName || "Không gán y tá"}</span>
               <StatusBadge value={room.status} />
               <StatusBadge value={room.isActive ? "active" : "inactive"} />
-              <button className="button small secondary" type="button" onClick={() => onUpdateRoom(room)}>
+              <button className="button small secondary" type="button" onClick={() => onEditRoom(room)}>
                 Cập nhật
               </button>
               <button className="button small danger" type="button" onClick={() => onDeleteRoom(room)}>
@@ -83,6 +87,76 @@ export default function ClinicRoomManagement({
           ))}
         </div>
       </section>
+
+      {editingRoom && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" onMouseDown={(event) => event.currentTarget === event.target && onCancelEditRoom()}>
+          <form className="account-modal panel" onSubmit={onUpdateRoom}>
+            <div className="section-title">
+              <DoorOpen size={20} />
+              <h2>Cập nhật phòng khám</h2>
+            </div>
+            <div className="form-grid account-form-grid">
+              <label className="field">
+                <span>Tên phòng</span>
+                <input value={editingRoom.name} onChange={(event) => onEditingRoomChange({ name: event.target.value })} required />
+              </label>
+              <label className="field">
+                <span>Bác sĩ phụ trách</span>
+                <select value={editingRoom.assignedDentist} onChange={(event) => onEditingRoomChange({ assignedDentist: event.target.value })}>
+                  <option value="">Chưa gán</option>
+                  {dentistUsers.map((dentist) => (
+                    <option key={dentist._id} value={dentist._id}>
+                      {dentist.fullName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Y tá phụ trách</span>
+                <select value={editingRoom.assignedNurse} onChange={(event) => onEditingRoomChange({ assignedNurse: event.target.value })}>
+                  <option value="">Không gán</option>
+                  {nurseUsers.map((nurse) => (
+                    <option key={nurse._id} value={nurse._id}>
+                      {nurse.fullName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Trạng thái phòng</span>
+                <select value={editingRoom.status} onChange={(event) => onEditingRoomChange({ status: event.target.value })}>
+                  <option value="available">Sẵn sàng</option>
+                  <option value="in_use">Đang dùng</option>
+                  <option value="cleaning">Đang vệ sinh</option>
+                  <option value="unavailable">Tạm ngưng</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Trạng thái hiển thị</span>
+                <select value={editingRoom.isActive ? "active" : "inactive"} onChange={(event) => onEditingRoomChange({ isActive: event.target.value === "active" })}>
+                  <option value="active">Hoạt động</option>
+                  <option value="inactive">Đã xóa</option>
+                </select>
+              </label>
+            </div>
+            <label className="field">
+              <span>Thiết bị</span>
+              <textarea
+                value={editingRoom.equipmentText || ""}
+                onChange={(event) => onEditingRoomChange({ equipmentText: event.target.value })}
+                rows="3"
+                placeholder="Máy chụp X-quang, Máy đo huyết áp"
+              />
+            </label>
+            <div className="row-actions">
+              <button className="button primary">Lưu cập nhật</button>
+              <button className="button ghost" type="button" onClick={onCancelEditRoom}>
+                Hủy
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </>
   );
 }

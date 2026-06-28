@@ -11,7 +11,7 @@ import { usePublicBootstrap } from "../utils/usePublicBootstrap.js";
 import BookingPage, { bookingSlotOptions, maxBookingDate, toClinicIso } from "./BookingPage.jsx";
 
 const lockedPatientStatuses = new Set(["cancelled", "rejected", "completed", "no_show"]);
-const patientFeatures = new Set(["home", "booking", "appointments", "invoices", "records"]);
+const patientFeatures = new Set(["home", "booking", "appointments", "history", "invoices", "records"]);
 
 export default function PatientDashboard() {
   const location = useLocation();
@@ -68,6 +68,10 @@ export default function PatientDashboard() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [activeFeature]);
 
   useEffect(() => {
     const tab = new URLSearchParams(location.search).get("tab") || "home";
@@ -254,6 +258,21 @@ export default function PatientDashboard() {
             canModifyAppointment={canModifyAppointment}
             cancelAppointment={cancelAppointment}
             dentistOptions={dentistOptions}
+            loading={loading}
+            rescheduleAppointment={rescheduleAppointment}
+            rescheduleForms={rescheduleForms}
+            updateRescheduleForm={updateRescheduleForm}
+          />
+        )}
+
+        {activeFeature === "history" && (
+          <PatientAppointmentList
+            appointments={appointments}
+            appointmentHistory={appointmentHistory}
+            canModifyAppointment={canModifyAppointment}
+            cancelAppointment={cancelAppointment}
+            dentistOptions={dentistOptions}
+            historyOnly
             loading={loading}
             rescheduleAppointment={rescheduleAppointment}
             rescheduleForms={rescheduleForms}

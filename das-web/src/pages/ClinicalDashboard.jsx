@@ -1,12 +1,12 @@
-import { ClipboardPenLine, DoorOpen, ReceiptText, Stethoscope } from "lucide-react";
+import { ClipboardPenLine, ReceiptText, Stethoscope } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ClinicalTreatmentForm from "../components/clinical/ClinicalTreatmentForm.jsx";
 import ClinicalWorkSchedule from "../components/clinical/ClinicalWorkSchedule.jsx";
 import ClinicalPerformedServices from "../components/clinical/nurse/ClinicalPerformedServices.jsx";
-import ClinicalRoomStatus from "../components/clinical/nurse/ClinicalRoomStatus.jsx";
 import Feedback from "../components/Feedback.jsx";
 import { useAuth } from "../redux/AuthContext.jsx";
+import { bookingSlotOptions, compareQueueWithinSlot, getAppointmentSlot } from "../utils/appointmentSlots.js";
 import { api, getErrorMessage } from "../utils/api.js";
 import { todayInput } from "../utils/format.js";
 
@@ -14,13 +14,13 @@ function getClinicalFeatures(role) {
   return [
     { id: "schedule", label: "Lịch khám", icon: Stethoscope },
     { id: "treatment", label: "Hồ sơ điều trị", icon: ClipboardPenLine },
-    ...(role === "nurse" ? [{ id: "performedServices", label: "Dịch vụ đã làm", icon: ReceiptText }] : []),
-    ...(role === "nurse" ? [{ id: "rooms", label: "Cập nhật phòng", icon: DoorOpen }] : [])
+    ...(role === "nurse" ? [{ id: "performedServices", label: "Dịch vụ đã làm", icon: ReceiptText }] : [])
   ];
 }
 
 const defaultRecordForm = {
   appointmentId: "",
+  visitNumber: 1,
   bloodPressure: "",
   heartRate: "",
   spo2: "",
@@ -74,11 +74,15 @@ export default function ClinicalDashboard() {
       setStaffSchedules(res.data.staffSchedules || []);
       setRecordForm((current) => ({
         ...current,
-        appointmentId: current.appointmentId || nextAppointments[0]?._id || ""
+        appointmentId: nextAppointments.some((appointment) => appointment._id === current.appointmentId)
+          ? current.appointmentId
+          : ""
       }));
       setPerformedServicesForm((current) => ({
         ...current,
-        appointmentId: current.appointmentId || nextAppointments[0]?._id || ""
+        appointmentId: nextAppointments.some((appointment) => appointment._id === current.appointmentId)
+          ? current.appointmentId
+          : ""
       }));
     } catch (err) {
       setError(getErrorMessage(err));
@@ -92,6 +96,10 @@ export default function ClinicalDashboard() {
   }, [date]);
 
   useEffect(() => {
+    load();
+  }, [activeFeature]);
+
+  useEffect(() => {
     const tab = new URLSearchParams(location.search).get("tab");
     if (tab && clinicalFeatures.some((item) => item.id === tab)) {
       setActiveFeature(tab);
@@ -103,13 +111,34 @@ export default function ClinicalDashboard() {
   const clinicalColumns = useMemo(() => buildClinicalColumns(appointments, rooms), [appointments, rooms]);
   const clinicalRows = useMemo(() => buildClinicalRows(appointments, clinicalColumns), [appointments, clinicalColumns]);
   const selectedAppointment = appointments.find((appointment) => appointment._id === recordForm.appointmentId);
+  const selectedTreatmentRecords = useMemo(() => getPatientTreatmentRecords(records, selectedAppointment), [records, selectedAppointment]);
+  const selectedTreatmentRecord = selectedTreatmentRecords[0] || null;
+  const selectedTreatmentVisits = useMemo(() => normalizeTreatmentVisits(selectedTreatmentRecord), [selectedTreatmentRecord]);
   const selectedPerformedAppointment = appointments.find((appointment) => appointment._id === performedServicesForm.appointmentId);
 
   function updateRecord(field, value) {
+    if (field === "appointmentId") {
+      const appointment = appointments.find((item) => item._id === value);
+      if (appointment) {
+        selectTreatmentAppointment(appointment);
+        return;
+      }
+    }
+    if (field === "visitNumber") {
+      selectTreatmentVisit(Number(value));
+      return;
+    }
     setRecordForm((current) => ({ ...current, [field]: value }));
   }
 
   function updatePerformedServices(field, value) {
+    if (field === "appointmentId") {
+      const appointment = appointments.find((item) => item._id === value);
+      if (appointment) {
+        setPerformedServicesFromAppointment(appointment);
+        return;
+      }
+    }
     setPerformedServicesForm((current) => ({ ...current, [field]: value }));
   }
 
@@ -119,38 +148,44 @@ export default function ClinicalDashboard() {
   }
 
   function selectTreatmentAppointment(appointment) {
-    const appointmentPatientId = appointment.patient?._id || appointment.patient;
-    const matchingRecords = records.filter((record) => {
-      const recordPatientId = record.patient?._id || record.patient;
-      return recordPatientId?.toString?.() === appointmentPatientId?.toString?.();
-    });
-    if (user?.role === "dentist") {
-      if (!matchingRecords.length) {
-        setError("Không có hồ sơ điều trị của bệnh nhân này.");
-        return;
-      }
-    }
-    const latestRecord = matchingRecords[0];
+    const matchingRecords = getPatientTreatmentRecords(records, appointment);
+    const latestRecord = matchingRecords[0] || null;
+    const visits = normalizeTreatmentVisits(latestRecord);
+    const visitNumber = visits.length ? visits[visits.length - 1].visitNumber : 1;
     setRecordForm((current) => ({
       ...current,
       appointmentId: appointment._id,
-      bloodPressure: latestRecord?.vitalSigns?.bloodPressure || "",
-      heartRate: latestRecord?.vitalSigns?.heartRate || "",
-      spo2: latestRecord?.vitalSigns?.spo2 || "",
-      temperature: latestRecord?.vitalSigns?.temperature || "",
-      respiratoryRate: latestRecord?.vitalSigns?.respiratoryRate || "",
-      diagnosis: latestRecord?.diagnosis || "",
-      treatmentResult: latestRecord?.treatmentResult || "",
-      treatmentNote: latestRecord?.treatmentNote || "",
-      treatmentPlan: latestRecord?.treatmentPlan || "",
-      prescription: latestRecord?.prescription || "",
-      aftercareInstructions: latestRecord?.aftercareInstructions || "",
-      estimatedCost: latestRecord?.estimatedCost || ""
+      ...recordValuesFromVisit(visits.find((visit) => visit.visitNumber === visitNumber), visitNumber)
     }));
+    if (user?.role === "dentist" && !matchingRecords.length) {
+      setMessage("");
+      setError("Không có hồ sơ điều trị của bệnh nhân này.");
+    } else {
+      setError("");
+    }
     openFeature("treatment");
   }
 
+  function selectTreatmentVisit(visitNumber) {
+    if (!selectedAppointment) return;
+    const visits = selectedTreatmentVisits;
+    if (visitNumber > visits.length + 1) {
+      setError(`Cần cập nhật lần ${visits.length + 1} trước khi cập nhật lần ${visitNumber}.`);
+      return;
+    }
+    setError("");
+    setRecordForm((current) => ({
+      ...current,
+      ...recordValuesFromVisit(visits.find((visit) => visit.visitNumber === visitNumber), visitNumber)
+    }));
+  }
+
   function selectPerformedServicesAppointment(appointment) {
+    setPerformedServicesFromAppointment(appointment);
+    openFeature("performedServices");
+  }
+
+  function setPerformedServicesFromAppointment(appointment) {
     const serviceState = {};
     (appointment.performedServices || []).forEach((item) => {
       const serviceId = item.service?._id || item.service;
@@ -167,7 +202,6 @@ export default function ClinicalDashboard() {
       services: serviceState,
       extraCosts: appointment.extraCosts || []
     });
-    openFeature("performedServices");
   }
 
   function togglePerformedService(service, selected, amount = null) {
@@ -225,6 +259,7 @@ export default function ClinicalDashboard() {
               respiratoryRate: recordForm.respiratoryRate
             },
             treatmentNote: recordForm.treatmentNote,
+            visitNumber: recordForm.visitNumber,
             diagnosis: recordForm.diagnosis,
             treatmentResult: recordForm.treatmentResult,
             treatmentPlan: recordForm.treatmentPlan,
@@ -233,6 +268,7 @@ export default function ClinicalDashboard() {
           }
         : {
             diagnosis: recordForm.diagnosis,
+            visitNumber: recordForm.visitNumber,
             treatmentResult: recordForm.treatmentResult,
             treatmentNote: recordForm.treatmentNote,
             treatmentPlan: recordForm.treatmentPlan,
@@ -281,7 +317,15 @@ export default function ClinicalDashboard() {
         services: selectedServices.length ? selectedServices : extraCosts,
         extraCosts: selectedServices.length ? extraCosts : []
       });
-      setMessage("Đã gửi dịch vụ đã thực hiện về phần hóa đơn của lễ tân.");
+      const appointment = appointments.find((item) => item._id === performedServicesForm.appointmentId);
+      if (appointment && ["checked_in", "in_treatment"].includes(appointment.status)) {
+        await api.patch(`/appointments/${performedServicesForm.appointmentId}/status`, {
+          status: "completed",
+          note: "Y tá đã hoàn tất lịch khám và xác nhận dịch vụ đã thực hiện."
+        });
+      }
+      setMessage("Đã hoàn tất lịch khám và gửi dịch vụ đã thực hiện về phần hóa đơn của lễ tân.");
+      openFeature("schedule");
       await load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -294,6 +338,29 @@ export default function ClinicalDashboard() {
       setMessage("");
       await api.patch(`/clinical/rooms/${roomId}/status`, { status });
       setMessage("Đã cập nhật trạng thái phòng khám.");
+      await load();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
+
+  async function updateClinicalAppointmentStatus(appointment, status) {
+    if (status === "completed") {
+      selectPerformedServicesAppointment(appointment);
+      setMessage("Kiểm tra dịch vụ đã thực hiện và xác nhận tổng tiền để hoàn tất lịch khám.");
+      return;
+    }
+
+    if (!window.confirm(status === "in_treatment" ? "Chuyển bệnh nhân sang trạng thái đang khám?" : "Xác nhận hoàn tất lịch khám?")) return;
+
+    try {
+      setError("");
+      setMessage("");
+      await api.patch(`/appointments/${appointment._id}/status`, {
+        status,
+        note: "Y tá cập nhật trạng thái lịch khám."
+      });
+      setMessage(status === "in_treatment" ? "Đã chuyển lịch sang đang khám." : "Đã hoàn tất lịch khám.");
       await load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -314,6 +381,8 @@ export default function ClinicalDashboard() {
           isLockedAppointment={isLockedAppointment}
           loading={loading}
           onDateChange={setDate}
+          onUpdateStatus={updateClinicalAppointmentStatus}
+          onSetRoomStatus={setRoomStatus}
           onSelectTreatment={selectTreatmentAppointment}
           onSelectPerformedServices={selectPerformedServicesAppointment}
           rooms={rooms}
@@ -330,6 +399,8 @@ export default function ClinicalDashboard() {
           onSubmit={submitRecord}
           records={records}
           selectedAppointment={selectedAppointment}
+          selectedRecord={selectedTreatmentRecord}
+          treatmentVisits={selectedTreatmentVisits}
           user={user}
         />
       )}
@@ -348,12 +419,71 @@ export default function ClinicalDashboard() {
           services={services}
         />
       )}
-
-      {activeFeature === "rooms" && user?.role === "nurse" && (
-        <ClinicalRoomStatus loading={loading} onSetRoomStatus={setRoomStatus} rooms={rooms} />
-      )}
     </div>
   );
+}
+
+function getPatientTreatmentRecords(records, appointment) {
+  if (!appointment) return [];
+  const appointmentPatientId = appointment.patient?._id || appointment.patient;
+  return records
+    .filter((record) => {
+      const recordPatientId = record.patient?._id || record.patient;
+      return recordPatientId?.toString?.() === appointmentPatientId?.toString?.();
+    })
+    .sort((first, second) => new Date(second.updatedAt || second.treatmentDate || 0) - new Date(first.updatedAt || first.treatmentDate || 0));
+}
+
+function normalizeTreatmentVisits(record) {
+  if (!record) return [];
+  const visits = Array.isArray(record.visits) ? record.visits.filter(Boolean) : [];
+  if (visits.length) {
+    return visits
+      .map((visit, index) => ({ ...visit, visitNumber: Number(visit.visitNumber || index + 1) }))
+      .sort((first, second) => first.visitNumber - second.visitNumber);
+  }
+
+  const hasLegacyData = [
+    record.vitalSigns,
+    record.diagnosis,
+    record.treatmentResult,
+    record.treatmentNote,
+    record.treatmentPlan,
+    record.prescription,
+    record.aftercareInstructions
+  ].some(Boolean);
+  return hasLegacyData
+    ? [{
+        visitNumber: 1,
+        vitalSigns: record.vitalSigns || {},
+        diagnosis: record.diagnosis || "",
+        treatmentResult: record.treatmentResult || "",
+        treatmentNote: record.treatmentNote || "",
+        treatmentPlan: record.treatmentPlan || "",
+        prescription: record.prescription || "",
+        aftercareInstructions: record.aftercareInstructions || "",
+        estimatedCost: record.estimatedCost || "",
+        updatedAt: record.updatedAt || record.treatmentDate
+      }]
+    : [];
+}
+
+function recordValuesFromVisit(visit, visitNumber) {
+  return {
+    visitNumber,
+    bloodPressure: visit?.vitalSigns?.bloodPressure || "",
+    heartRate: visit?.vitalSigns?.heartRate || "",
+    spo2: visit?.vitalSigns?.spo2 || "",
+    temperature: visit?.vitalSigns?.temperature || "",
+    respiratoryRate: visit?.vitalSigns?.respiratoryRate || "",
+    diagnosis: visit?.diagnosis || "",
+    treatmentResult: visit?.treatmentResult || "",
+    treatmentNote: visit?.treatmentNote || "",
+    treatmentPlan: visit?.treatmentPlan || "",
+    prescription: visit?.prescription || "",
+    aftercareInstructions: visit?.aftercareInstructions || "",
+    estimatedCost: visit?.estimatedCost || ""
+  };
 }
 
 function buildClinicalColumns(appointments, rooms) {
@@ -381,26 +511,16 @@ function buildClinicalColumns(appointments, rooms) {
 }
 
 function buildClinicalRows(appointments, columns) {
-  const grouped = new Map(columns.map((column) => [column._id, []]));
-  appointments
-    .slice()
-    .sort((first, second) => queueSortValue(first) - queueSortValue(second))
-    .forEach((appointment) => {
-      const dentistId = appointment.dentist?._id;
-      if (grouped.has(dentistId)) {
-        grouped.get(dentistId).push(appointment);
-      }
-    });
-
-  const rowCount = Math.max(1, ...columns.map((column) => grouped.get(column._id)?.length || 0));
-  return Array.from({ length: rowCount }, (_, index) => ({
-    index: index + 1,
-    cells: columns.map((column) => grouped.get(column._id)?.[index] || null)
+  return bookingSlotOptions.map((slot) => ({
+    slotId: slot.slotId,
+    slotName: slot.slotName,
+    timeLabel: slot.timeLabel,
+    cells: columns.map((column) =>
+      appointments
+        .filter((appointment) => appointment.dentist?._id === column._id && getAppointmentSlot(appointment.startAt).slotId === slot.slotId)
+        .sort(compareQueueWithinSlot)
+    )
   }));
-}
-
-function queueSortValue(appointment) {
-  return new Date(appointment.checkedInAt || appointment.checkInTime || appointment.startAt || 0).getTime();
 }
 
 function canEditAppointment(user, appointment) {

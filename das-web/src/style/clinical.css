@@ -21,6 +21,7 @@
 .room-chip {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -29,6 +30,23 @@
   padding: 8px 10px;
   font-size: 0.86rem;
   font-weight: 780;
+}
+
+.clinical-room-status-chip {
+  max-width: 100%;
+}
+
+.room-chip-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.button.tiny {
+  min-height: 28px;
+  padding: 5px 8px;
+  border-radius: var(--radius);
+  font-size: 0.76rem;
 }
 
 .clinical-schedule-summary,

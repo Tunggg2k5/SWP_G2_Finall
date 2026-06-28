@@ -11,7 +11,7 @@ import StaffScheduleManagement from "../components/admin/StaffScheduleManagement
 import Feedback from "../components/Feedback.jsx";
 import { api, getErrorMessage } from "../utils/api.js";
 import { todayInput } from "../utils/format.js";
-import { firstError, requireValue, validateDate, validateName, validateNote, validatePhone } from "../utils/validation.js";
+import { firstError, requireValue, validateDate, validateEmail, validateName, validateNote, validatePhone } from "../utils/validation.js";
 
 const adminFeatures = [
   { id: "stats", label: "Thống kê", icon: BarChart3 },
@@ -37,6 +37,36 @@ const clinicSessions = [
   { start: "14:00", end: "17:30" }
 ];
 
+const defaultServiceForm = {
+  name: "",
+  description: "",
+  durationMinutes: 30,
+  price: 0,
+  requiresPrepayment: true,
+  isConsultation: false
+};
+
+const defaultUserForm = {
+  fullName: "",
+  email: "",
+  phone: "",
+  role: "patient"
+};
+
+const defaultRoomForm = {
+  name: "",
+  assignedDentist: "",
+  assignedNurse: "",
+  status: "available"
+};
+
+const defaultWorkingHourForm = {
+  dayOfWeek: 1,
+  shiftName: "Ca sáng",
+  startTime: "08:00",
+  endTime: "11:30"
+};
+
 export default function AdminDashboard() {
   const location = useLocation();
   const [activeFeature, setActiveFeature] = useState("stats");
@@ -58,31 +88,14 @@ export default function AdminDashboard() {
     startDate: todayInput().slice(0, 8) + "01",
     endDate: todayInput()
   });
-  const [serviceForm, setServiceForm] = useState({
-    name: "",
-    description: "",
-    durationMinutes: 30,
-    price: 0,
-    requiresPrepayment: true,
-    isConsultation: false
-  });
-  const [userForm, setUserForm] = useState({
-    fullName: "",
-    phone: "",
-    role: "patient"
-  });
-  const [roomForm, setRoomForm] = useState({
-    name: "",
-    assignedDentist: "",
-    assignedNurse: "",
-    status: "available"
-  });
-  const [workingHourForm, setWorkingHourForm] = useState({
-    dayOfWeek: 1,
-    shiftName: "Ca sáng",
-    startTime: "08:00",
-    endTime: "11:30"
-  });
+  const [serviceForm, setServiceForm] = useState(defaultServiceForm);
+  const [editingService, setEditingService] = useState(null);
+  const [userForm, setUserForm] = useState(defaultUserForm);
+  const [editingUser, setEditingUser] = useState(null);
+  const [roomForm, setRoomForm] = useState(defaultRoomForm);
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [workingHourForm, setWorkingHourForm] = useState(defaultWorkingHourForm);
+  const [editingWorkingHour, setEditingWorkingHour] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
     userId: "",
     timeSlotId: "",
@@ -123,6 +136,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [activeFeature]);
 
   useEffect(() => {
     const tab = new URLSearchParams(location.search).get("tab");
@@ -168,14 +185,7 @@ export default function AdminDashboard() {
         durationMinutes: Number(serviceForm.durationMinutes),
         price: Number(serviceForm.price)
       });
-      setServiceForm({
-        name: "",
-        description: "",
-        durationMinutes: 30,
-        price: 0,
-        requiresPrepayment: true,
-        isConsultation: false
-      });
+      setServiceForm(defaultServiceForm);
       setMessage("Đã tạo dịch vụ.");
       load();
     } catch (err) {
@@ -185,7 +195,11 @@ export default function AdminDashboard() {
 
   async function createUser(event) {
     event.preventDefault();
-    const validationError = firstError(validateName(userForm.fullName), validatePhone(userForm.phone));
+    const validationError = firstError(
+      validateName(userForm.fullName),
+      userForm.email?.trim() ? validateEmail(userForm.email) : "",
+      validatePhone(userForm.phone)
+    );
     if (validationError) {
       setError(validationError);
       return;
@@ -198,7 +212,7 @@ export default function AdminDashboard() {
         ...userForm,
         password: "nhakhoa2026"
       });
-      setUserForm({ fullName: "", phone: "", role: "patient" });
+      setUserForm(defaultUserForm);
       setMessage("Đã tạo tài khoản. Mật khẩu mặc định: nhakhoa2026");
       load();
     } catch (err) {
@@ -206,25 +220,45 @@ export default function AdminDashboard() {
     }
   }
 
-  async function updateService(service) {
-    const name = window.prompt("Tên dịch vụ", service.name || "");
-    if (name === null) return;
-    const description = window.prompt("Mô tả", service.description || "");
-    if (description === null) return;
-    const durationMinutes = window.prompt("Thời lượng (phút)", String(service.durationMinutes || 30));
-    if (durationMinutes === null) return;
-    const price = window.prompt("Giá tiền", String(service.price || 0));
-    if (price === null) return;
+  function startEditService(service) {
+    setEditingService({
+      _id: service._id,
+      name: service.name || "",
+      description: service.description || "",
+      durationMinutes: service.durationMinutes || 30,
+      price: service.price || 0,
+      requiresPrepayment: service.requiresPrepayment !== false,
+      isConsultation: Boolean(service.isConsultation),
+      isActive: service.isActive !== false
+    });
+  }
 
+  async function updateService(event) {
+    event.preventDefault();
+    if (!editingService) return;
+    const validationError = firstError(
+      validateName(editingService.name, "Tên dịch vụ"),
+      validateNote(editingService.description),
+      Number(editingService.durationMinutes) >= 10 ? "" : "Thời lượng dịch vụ tối thiểu 10 phút.",
+      Number(editingService.price) >= 0 ? "" : "Giá dịch vụ không được âm."
+    );
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     try {
       setError("");
       setMessage("");
-      await api.patch(`/admin/services/${service._id}`, {
-        name,
-        description,
-        durationMinutes: Number(durationMinutes),
-        price: String(price)
+      await api.patch(`/admin/services/${editingService._id}`, {
+        name: editingService.name,
+        description: editingService.description,
+        durationMinutes: Number(editingService.durationMinutes),
+        price: String(editingService.price),
+        requiresPrepayment: Boolean(editingService.requiresPrepayment),
+        isConsultation: Boolean(editingService.isConsultation),
+        isActive: Boolean(editingService.isActive)
       });
+      setEditingService(null);
       setMessage("Đã cập nhật dịch vụ.");
       load();
     } catch (err) {
@@ -272,24 +306,97 @@ export default function AdminDashboard() {
     }
   }
 
-  async function updateRoom(room, changes = null) {
-    const payload = changes || {};
-    if (!changes) {
-      const name = window.prompt("Tên phòng", room.name || "");
-      if (name === null) return;
-      const status = window.prompt("Trạng thái (available, in_use, cleaning, unavailable)", room.status || "available");
-      if (status === null) return;
-      payload.name = name;
-      payload.assignedDentist = room.assignedDentist?._id || "";
-      payload.assignedNurse = room.assignedNurse?._id || "";
-      payload.status = status;
+  function startEditRoom(room) {
+    setEditingRoom({
+      _id: room._id,
+      name: room.name || "",
+      assignedDentist: room.assignedDentist?._id || "",
+      assignedNurse: room.assignedNurse?._id || "",
+      status: room.status || "available",
+      equipmentText: Array.isArray(room.equipment) ? room.equipment.join(", ") : "",
+      isActive: room.isActive !== false
+    });
+  }
+
+  async function patchRoom(room, changes = {}) {
+    try {
+      setError("");
+      setMessage("");
+      await api.patch(`/admin/rooms/${room._id}`, changes);
+      setMessage(changes?.isActive === false ? "Đã xóa phòng khám." : "Đã cập nhật phòng khám.");
+      load();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
+
+  async function updateRoom(event) {
+    event.preventDefault();
+    if (!editingRoom) return;
+    const validationError = firstError(validateName(editingRoom.name, "Tên phòng"));
+    if (validationError) {
+      setError(validationError);
+      return;
     }
 
     try {
       setError("");
       setMessage("");
-      await api.patch(`/admin/rooms/${room._id}`, payload);
-      setMessage(changes?.isActive === false ? "Đã xóa phòng khám." : "Đã cập nhật phòng khám.");
+      await api.patch(`/admin/rooms/${editingRoom._id}`, {
+        name: editingRoom.name,
+        assignedDentist: editingRoom.assignedDentist,
+        assignedNurse: editingRoom.assignedNurse,
+        status: editingRoom.status,
+        equipment: parseCommaList(editingRoom.equipmentText),
+        isActive: Boolean(editingRoom.isActive)
+      });
+      setEditingRoom(null);
+      setMessage("Đã cập nhật phòng khám.");
+      load();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
+
+  function startEditUser(user) {
+    setEditingUser({
+      _id: user._id,
+      fullName: user.fullName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      status: user.status || "active",
+      bio: user.bio || "",
+      yearsOfExperience: user.yearsOfExperience || 0
+    });
+  }
+
+  async function updateUser(event) {
+    event.preventDefault();
+    if (!editingUser) return;
+    const validationError = firstError(
+      validateName(editingUser.fullName),
+      editingUser.email?.trim() ? validateEmail(editingUser.email) : "",
+      editingUser.phone?.trim() ? validatePhone(editingUser.phone) : "",
+      validateNote(editingUser.bio)
+    );
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    try {
+      setError("");
+      setMessage("");
+      await api.patch(`/admin/users/${editingUser._id}`, {
+        fullName: editingUser.fullName,
+        email: editingUser.email,
+        phone: editingUser.phone,
+        status: editingUser.status,
+        bio: editingUser.bio,
+        yearsOfExperience: Number(editingUser.yearsOfExperience || 0)
+      });
+      setEditingUser(null);
+      setMessage("Đã cập nhật tài khoản.");
       load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -312,7 +419,7 @@ export default function AdminDashboard() {
         assignedDentist: roomForm.assignedDentist || undefined,
         assignedNurse: roomForm.assignedNurse || undefined
       });
-      setRoomForm({ name: "", assignedDentist: "", assignedNurse: "", status: "available" });
+      setRoomForm(defaultRoomForm);
       setMessage("Đã tạo phòng khám.");
       load();
     } catch (err) {
@@ -345,18 +452,39 @@ export default function AdminDashboard() {
     }
   }
 
-  async function updateWorkingHourDetails(item) {
-    const shiftName = window.prompt("Tên ca", item.shiftName || "");
-    if (shiftName === null) return;
-    const startTime = window.prompt("Bắt đầu", item.startTime || "08:00");
-    if (startTime === null) return;
-    const endTime = window.prompt("Kết thúc", item.endTime || "11:30");
-    if (endTime === null) return;
+  function startEditWorkingHour(item) {
+    setEditingWorkingHour({
+      _id: item._id,
+      dayOfWeek: item.dayOfWeek || 1,
+      shiftName: item.shiftName || "",
+      startTime: item.startTime || "08:00",
+      endTime: item.endTime || "11:30",
+      status: item.status || "active"
+    });
+  }
 
+  async function updateWorkingHourDetails(event) {
+    event.preventDefault();
+    if (!editingWorkingHour) return;
+    const validationError = firstError(
+      validateName(editingWorkingHour.shiftName, "Tên ca"),
+      validateTimeRange(editingWorkingHour.startTime, editingWorkingHour.endTime)
+    );
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     try {
       setError("");
       setMessage("");
-      await api.patch(`/admin/working-hours/${item._id}`, { shiftName, startTime, endTime });
+      await api.patch(`/admin/working-hours/${editingWorkingHour._id}`, {
+        dayOfWeek: Number(editingWorkingHour.dayOfWeek),
+        shiftName: editingWorkingHour.shiftName,
+        startTime: editingWorkingHour.startTime,
+        endTime: editingWorkingHour.endTime,
+        status: editingWorkingHour.status
+      });
+      setEditingWorkingHour(null);
       setMessage("Đã cập nhật giờ làm.");
       load();
     } catch (err) {
@@ -475,8 +603,13 @@ export default function AdminDashboard() {
 
       {activeFeature === "users" && (
         <AccountManagement
+          editingUser={editingUser}
           loading={loading}
           onCreateUser={createUser}
+          onEditUser={startEditUser}
+          onEditingUserChange={(next) => setEditingUser((current) => ({ ...current, ...next }))}
+          onSubmitEditUser={updateUser}
+          onCancelEditUser={() => setEditingUser(null)}
           onResetUserPassword={resetUserPassword}
           onUpdateUserStatus={updateUserStatus}
           onUserFormChange={(next) => setUserForm((current) => ({ ...current, ...next }))}
@@ -487,10 +620,14 @@ export default function AdminDashboard() {
 
       {activeFeature === "services" && (
         <DentalServiceManagement
+          editingService={editingService}
           loading={loading}
           onCreateService={createService}
+          onCancelEditService={() => setEditingService(null)}
+          onEditingServiceChange={(next) => setEditingService((current) => ({ ...current, ...next }))}
           onServiceFormChange={(next) => setServiceForm((current) => ({ ...current, ...next }))}
           onDeleteService={deleteService}
+          onEditService={startEditService}
           onUpdateService={updateService}
           serviceForm={serviceForm}
           services={services}
@@ -500,11 +637,15 @@ export default function AdminDashboard() {
       {activeFeature === "rooms" && (
         <ClinicRoomManagement
           dentistUsers={dentistUsers}
+          editingRoom={editingRoom}
           loading={loading}
           nurseUsers={nurseUsers}
+          onCancelEditRoom={() => setEditingRoom(null)}
           onCreateRoom={createRoom}
+          onEditingRoomChange={(next) => setEditingRoom((current) => ({ ...current, ...next }))}
           onRoomFormChange={(next) => setRoomForm((current) => ({ ...current, ...next }))}
-          onDeleteRoom={(room) => updateRoom(room, { isActive: false })}
+          onDeleteRoom={(room) => patchRoom(room, { isActive: false })}
+          onEditRoom={startEditRoom}
           onUpdateRoom={updateRoom}
           roomForm={roomForm}
           rooms={rooms}
@@ -513,9 +654,13 @@ export default function AdminDashboard() {
 
       {activeFeature === "workingHours" && (
         <ClinicWorkingHours
+          editingWorkingHour={editingWorkingHour}
           loading={loading}
+          onCancelEditWorkingHour={() => setEditingWorkingHour(null)}
           onCreateWorkingHour={createWorkingHour}
           onDeleteWorkingHour={deleteWorkingHour}
+          onEditingWorkingHourChange={(next) => setEditingWorkingHour((current) => ({ ...current, ...next }))}
+          onEditWorkingHour={startEditWorkingHour}
           onUpdateWorkingHour={updateWorkingHourDetails}
           onWorkingHourFormChange={(next) => setWorkingHourForm((current) => ({ ...current, ...next }))}
           workingHourForm={workingHourForm}
@@ -549,6 +694,13 @@ function validateTimeRange(startTime, endTime) {
     return "Thời gian phải nằm trong ca sáng 08:00 - 11:30 hoặc ca chiều 14:00 - 17:30.";
   }
   return "";
+}
+
+function parseCommaList(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function downloadJson(payload, filename) {

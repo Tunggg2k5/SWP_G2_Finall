@@ -15,6 +15,8 @@ export default function ClinicalWorkSchedule({
   onDateChange,
   onSelectPerformedServices,
   onSelectTreatment,
+  onSetRoomStatus,
+  onUpdateStatus,
   rooms,
   user
 }) {
@@ -30,9 +32,20 @@ export default function ClinicalWorkSchedule({
         <div className="clinical-room-strip">
           {visibleRooms.length ? (
             visibleRooms.map((room) => (
-              <span className="room-chip" key={room._id}>
-                {room.name} / {room.assignedDentist?.fullName || "Chưa gán bác sĩ"}
-              </span>
+              <div className="room-chip clinical-room-status-chip" key={room._id}>
+                <span>{room.name} / {room.assignedDentist?.fullName || "Chưa gán bác sĩ"}</span>
+                <StatusBadge value={room.status} />
+                {user?.role === "nurse" && (
+                  <span className="room-chip-actions">
+                    <button className="button tiny" type="button" onClick={() => onSetRoomStatus(room._id, "cleaning")}>
+                      Vệ sinh
+                    </button>
+                    <button className="button tiny secondary" type="button" onClick={() => onSetRoomStatus(room._id, "available")}>
+                      Sẵn sàng
+                    </button>
+                  </span>
+                )}
+              </div>
             ))
           ) : (
             <span className="room-chip muted">Chưa có phòng được phân công</span>
@@ -42,10 +55,6 @@ export default function ClinicalWorkSchedule({
           <span>Ngày</span>
           <input type="date" value={date} onChange={(event) => onDateChange(event.target.value)} />
         </label>
-        <div className="clinical-schedule-summary">
-          <strong>{appointments.length}</strong>
-          <span>lịch khám</span>
-        </div>
       </div>
 
       {loading ? (
@@ -54,9 +63,9 @@ export default function ClinicalWorkSchedule({
         <div className="reception-schedule-table-wrapper">
           <div
             className="reception-schedule-grid clinical-schedule-grid"
-            style={{ gridTemplateColumns: `74px repeat(${clinicalColumns.length}, minmax(250px, 1fr))` }}
+            style={{ gridTemplateColumns: `130px repeat(${clinicalColumns.length}, minmax(250px, 1fr))` }}
           >
-            <div className="schedule-head schedule-index-head">STT</div>
+            <div className="schedule-head schedule-index-head">Slot</div>
             {clinicalColumns.map((column) => (
               <div className="schedule-head" key={column._id}>
                 <strong>{column.fullName}</strong>
@@ -64,33 +73,48 @@ export default function ClinicalWorkSchedule({
               </div>
             ))}
             {clinicalRows.map((row) => (
-              <Fragment key={row.index}>
-                <div className="schedule-time-cell">{row.index}</div>
-                {row.cells.map((appointment, columnIndex) => (
-                  <div className="schedule-cell" key={`${row.index}-${clinicalColumns[columnIndex]._id}`}>
-                    {appointment ? (
-                      <article className={`schedule-cell-card ${isLockedAppointment(appointment) ? "locked" : ""}`}>
-                        <div>
-                          <strong>{appointment.patient?.fullName || "Bệnh nhân"}</strong>
-                          <span>{appointment.service?.name || "Dịch vụ"} / {appointment.room?.name || "Phòng khám"}</span>
-                          <small>Giờ khám: {formatDateTime(appointment.startAt)}</small>
-                        </div>
-                        <StatusBadge value={appointment.status} />
-                        <div className="row-actions schedule-status-actions">
-                          {canEditAppointment(user, appointment) && (
-                            <>
-                              <button className="button small" type="button" onClick={() => onSelectTreatment(appointment)}>
-                                {user?.role === "dentist" ? "Xem hồ sơ điều trị" : "Hồ sơ điều trị"}
-                              </button>
-                              {user?.role === "nurse" && (
-                                <button className="button small secondary" type="button" onClick={() => onSelectPerformedServices(appointment)}>
-                                  Dịch vụ đã làm
+              <Fragment key={row.slotId}>
+                <div className="schedule-time-cell">
+                  <strong>{row.slotName}</strong>
+                  <span>{row.timeLabel}</span>
+                </div>
+                {row.cells.map((cellAppointments, columnIndex) => (
+                  <div className="schedule-cell" key={`${row.slotId}-${clinicalColumns[columnIndex]._id}`}>
+                    {cellAppointments.length ? (
+                      cellAppointments.map((appointment) => (
+                        <article className={`schedule-cell-card ${isLockedAppointment(appointment) ? "locked" : ""}`} key={appointment._id}>
+                          <div>
+                            <strong>{appointment.patient?.fullName || "Bệnh nhân"}</strong>
+                            <span>{appointment.service?.name || "Dịch vụ"} / {appointment.room?.name || "Phòng khám"}</span>
+                            <small>Giờ khám: {formatDateTime(appointment.startAt)}</small>
+                          </div>
+                          <StatusBadge value={appointment.status} />
+                          <div className="row-actions schedule-status-actions">
+                            {canEditAppointment(user, appointment) && (
+                              <>
+                                {user?.role === "nurse" && appointment.status === "checked_in" && (
+                                  <button className="button small secondary" type="button" onClick={() => onUpdateStatus(appointment, "in_treatment")}>
+                                    Đang khám
+                                  </button>
+                                )}
+                                {user?.role === "nurse" && appointment.status === "in_treatment" && (
+                                  <button className="button small primary" type="button" onClick={() => onUpdateStatus(appointment, "completed")}>
+                                    Hoàn tất
+                                  </button>
+                                )}
+                                <button className="button small" type="button" onClick={() => onSelectTreatment(appointment)}>
+                                  {user?.role === "dentist" ? "Xem hồ sơ điều trị" : "Hồ sơ điều trị"}
                                 </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </article>
+                                {user?.role === "nurse" && (
+                                  <button className="button small secondary" type="button" onClick={() => onSelectPerformedServices(appointment)}>
+                                    Dịch vụ đã làm
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </article>
+                      ))
                     ) : (
                       <div className="schedule-empty-cell">Chưa có bệnh nhân</div>
                     )}

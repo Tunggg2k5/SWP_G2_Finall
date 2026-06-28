@@ -18,6 +18,9 @@ export default function InvoiceCard({
 }) {
   const total = Number(invoice.total || invoice.totalAmount || 0);
   const paidAmount = Number(invoice.paidAmount || 0);
+  const items = (invoice.items || []).length
+    ? invoice.items
+    : [{ name: invoice.appointment?.service?.name || "Dịch vụ nha khoa", amount: total }];
   const appointmentId = invoice.appointment?._id;
   const canReview = appointmentId && invoice.appointment?.status === "completed";
   const currentReviewForm = reviewForm || {
@@ -28,11 +31,11 @@ export default function InvoiceCard({
   return (
     <div className="record-card" key={invoice._id}>
       <strong>{invoice.appointment?.service?.name || "Hóa đơn dịch vụ"}</strong>
-      <p>{formatMoney(paidAmount)} / {formatMoney(total)}</p>
+      <p>Đã thanh toán: {formatMoney(paidAmount)} / Tổng: {formatMoney(total)}</p>
       <span className="mini">Ngày tạo: {formatDateTime(invoice.invoiceDate || invoice.createdAt)}</span>
       <span className="mini">Lịch hẹn: {formatDateTime(invoice.appointment?.startAt)}</span>
       <div className="invoice-items-list">
-        {(invoice.items || []).map((item, index) => (
+        {items.map((item, index) => (
           <span key={`${invoice._id}-item-${index}`}>
             {item.name}: {formatMoney(Number(item.amount || item.price || 0))}
           </span>
