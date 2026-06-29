@@ -66,6 +66,7 @@ export default function ReceptionistDashboard() {
         patientId: current.patientId || res.data.patients[0]?._id || "",
         serviceId: current.serviceId || res.data.services[0]?._id || ""
       }));
+      window.dispatchEvent(new Event("das:refresh-badges"));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

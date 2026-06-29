@@ -1,4 +1,4 @@
-import { ReceiptText } from "lucide-react";
+import { ReceiptText, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import EmptyState from "../EmptyState.jsx";
 import StatusBadge from "../StatusBadge.jsx";
@@ -21,13 +21,23 @@ export default function ReceptionCheckInAppointments({
   setPaymentMethods
 }) {
   const [invoiceFilter, setInvoiceFilter] = useState("unpaid");
+  const [invoiceSearch, setInvoiceSearch] = useState("");
 
   const filteredAppointments = useMemo(() => {
+    const keyword = invoiceSearch.trim().toLowerCase();
     return checkInAppointments.filter((appointment) => {
       const invoiceStatus = appointment.invoice?.status || "unpaid";
-      return invoiceFilter === "all" || invoiceStatus === invoiceFilter;
+      const matchesStatus = invoiceFilter === "all" || invoiceStatus === invoiceFilter;
+      const matchesKeyword =
+        !keyword ||
+        [appointment.patient?.fullName, appointment.patient?.phone, appointment.service?.name]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+      return matchesStatus && matchesKeyword;
     });
-  }, [checkInAppointments, invoiceFilter]);
+  }, [checkInAppointments, invoiceFilter, invoiceSearch]);
 
   return (
     <section className="panel reception-checkin-panel">
@@ -46,6 +56,17 @@ export default function ReceptionCheckInAppointments({
             <option value="paid">Đã trả đủ</option>
             <option value="all">Tất cả</option>
           </select>
+        </label>
+        <label className="field inline-field">
+          <span>Tìm bệnh nhân</span>
+          <div className="input-with-icon">
+            <Search size={17} />
+            <input
+              value={invoiceSearch}
+              onChange={(event) => setInvoiceSearch(event.target.value)}
+              placeholder="Tên hoặc SĐT"
+            />
+          </div>
         </label>
       </div>
 

@@ -404,3 +404,108 @@ th {
 .password-toggle:hover {
   color: var(--primary);
 }
+
+.service-admin-row,
+.room-admin-row {
+  display: grid;
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 10px;
+  min-height: 88px;
+  padding: 16px 18px;
+}
+
+.service-admin-row {
+  grid-template-columns: minmax(220px, 0.75fr) minmax(360px, 1.4fr) minmax(120px, auto) minmax(190px, auto);
+}
+
+.room-admin-row {
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, auto) minmax(120px, auto) minmax(190px, auto);
+}
+
+.service-admin-row > strong {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.service-admin-row .row-actions,
+.room-admin-row .row-actions {
+  justify-self: end;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+}
+
+.service-admin-row .button,
+.room-admin-row .button {
+  min-width: 88px;
+  justify-content: center;
+}
+
+.room-admin-row > span:nth-child(2),
+.room-admin-row > span:nth-child(3) {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.panel .form-grid > .button.primary:last-child {
+  justify-self: start;
+  width: auto;
+  min-width: 128px;
+}
+
+.notification-actions.bottom {
+  padding: 12px 16px 16px;
+  border-top: 1px solid #d8e5f7;
+  background: #f8fbff;
+}
+
+.notification-card.unread {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.14);
+}
+
+.notification-card.unread .notification-avatar {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.notification-card.unread strong::after {
+  content: "Mới";
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f97316;
+  color: #ffffff;
+  font-size: 0.68rem;
+  vertical-align: middle;
+}
+
+.notification-card.read {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  opacity: 0.78;
+}
+
+.notification-card.read .notification-avatar {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .service-admin-row,
+  .room-admin-row {
+    grid-template-columns: 1fr;
+  }
+
+  .service-admin-row > strong,
+  .service-admin-row .row-actions,
+  .room-admin-row .row-actions,
+  .room-admin-row > span:nth-child(2),
+  .room-admin-row > span:nth-child(3) {
+    justify-self: start;
+  }
+}

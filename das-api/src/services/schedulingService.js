@@ -32,6 +32,25 @@ function hasDirectTimeConflict(appointments, startAt, endAt) {
   return appointments.some((appointment) => startAt < appointment.endAt && endAt > appointment.startAt);
 }
 
+function slotBoundsFor(startAt) {
+  const local = new Date(startAt.getTime() + 7 * 60 * 60 * 1000);
+  const hour = local.getUTCHours();
+  const minute = local.getUTCMinutes();
+  const total = hour * 60 + minute;
+  const slots = [
+    [8 * 60, 10 * 60 + 30],
+    [10 * 60 + 30, 12 * 60],
+    [14 * 60, 16 * 60],
+    [16 * 60, 17 * 60 + 30]
+  ];
+  const slot = slots.find(([start, end]) => total >= start && total < end) || [total, total + BOOKING_DURATION_MINUTES];
+  const dayStartUtc = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate(), 0, 0) - 7 * 60 * 60 * 1000;
+  return {
+    startAt: new Date(dayStartUtc + slot[0] * 60_000),
+    endAt: new Date(dayStartUtc + slot[1] * 60_000)
+  };
+}
+
 async function getAppointmentsForDate(date, excludeAppointmentId) {
   const query = {
     status: { $in: BLOCKING_STATUSES },
@@ -84,6 +103,21 @@ async function assertPatientHasNoTimeConflict(patientId, startAt, endAt, exclude
   }
 }
 
+async function assertPatientHasNoSameSlot(patientId, startAt, excludeAppointmentId) {
+  const slot = slotBoundsFor(startAt);
+  const query = {
+    patient: patientId,
+    status: { $in: BLOCKING_STATUSES },
+    startAt: { $lt: slot.endAt },
+    endAt: { $gt: slot.startAt }
+  };
+  if (excludeAppointmentId) query._id = { $ne: excludeAppointmentId };
+  const existing = await schedulingRepository.findAppointmentConflict(query, "startAt endAt");
+  if (existing) {
+    throw httpError("Bệnh nhân đã có lịch hẹn trong cùng slot của ngày này.", 409);
+  }
+}
+
 async function assertAppointmentResourcesAvailable({ patientId, dentistId, nurseId, roomId, startAt, endAt, excludeAppointmentId }) {
   const resourceChecks = [
     { room: roomId },
@@ -129,7 +163,7 @@ export async function findAvailableSlots({ date, serviceId, excludeAppointmentId
   }
 
   const service = await schedulingRepository.findServiceById(serviceId);
-  if (!service || !service.isActive) {
+  if (!service || service.isActive === false) {
     throw httpError("Không tìm thấy dịch vụ nha khoa.", 404);
   }
 
@@ -228,7 +262,7 @@ export async function createAppointmentFromSlot({ requester, patientId, serviceI
   }
 
   const service = await schedulingRepository.findServiceById(serviceId);
-  if (!service || !service.isActive) {
+  if (!service || service.isActive === false) {
     throw httpError("Không tìm thấy dịch vụ nha khoa.", 404);
   }
 
@@ -245,6 +279,7 @@ export async function createAppointmentFromSlot({ requester, patientId, serviceI
     }
 
     const requestedEnd = addMinutes(requestedStart, BOOKING_DURATION_MINUTES);
+    await assertPatientHasNoSameSlot(patient._id, requestedStart);
     await assertPatientHasNoTimeConflict(patient._id, requestedStart, requestedEnd);
 
     return schedulingRepository.createAppointment({
@@ -269,6 +304,7 @@ export async function createAppointmentFromSlot({ requester, patientId, serviceI
       throw httpError("Phòng khám không làm việc trong ngày đã chọn.", 400);
     }
     const requestedEnd = addMinutes(requestedStart, BOOKING_DURATION_MINUTES);
+    await assertPatientHasNoSameSlot(patient._id, requestedStart);
     await assertPatientHasNoTimeConflict(patient._id, requestedStart, requestedEnd);
 
     return schedulingRepository.createAppointment({
@@ -301,6 +337,7 @@ export async function createAppointmentFromSlot({ requester, patientId, serviceI
   }
 
   await assertPatientHasNoTimeConflict(patient._id, selected.startAt, selected.endAt, undefined, patientAppointments);
+  await assertPatientHasNoSameSlot(patient._id, selected.startAt);
 
   const nurse = selected.nurse || await selectAvailableNurse(selected.startAt, selected.endAt, date);
   if (!canRequestBookedSlot) {
@@ -384,6 +421,7 @@ export async function rescheduleAppointmentFromSlot({ appointment, serviceId, da
   }
 
   await assertPatientHasNoTimeConflict(appointment.patient, selected.startAt, selected.endAt, appointment._id, patientAppointments);
+  await assertPatientHasNoSameSlot(appointment.patient, selected.startAt, appointment._id);
   const nurse = selected.nurse || await selectAvailableNurse(selected.startAt, selected.endAt, date);
 
   if (appointment.appointmentSlot) {

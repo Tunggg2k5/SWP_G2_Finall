@@ -22,10 +22,13 @@ export default function ClinicalTreatmentForm({
   const [visitCount, setVisitCount] = useState(5);
 
   const selectedPatientId = selectedAppointment?.patient?._id || selectedAppointment?.patient;
+  const selectedAppointmentId = selectedAppointment?._id?.toString?.();
   const dentistRecords = useMemo(() => {
     const keyword = dentistSearch.trim().toLowerCase();
     return records
       .filter((record) => {
+        const recordAppointmentId = (record.appointment?._id || record.appointment)?.toString?.();
+        if (selectedAppointmentId) return recordAppointmentId === selectedAppointmentId;
         const patientId = record.patient?._id || record.patient;
         const bySelectedAppointment = selectedPatientId ? patientId?.toString?.() === selectedPatientId?.toString?.() : false;
         if (!keyword) return bySelectedAppointment;
@@ -35,7 +38,7 @@ export default function ClinicalTreatmentForm({
         return selectedPatientId ? matchesKeyword && bySelectedAppointment : matchesKeyword;
       })
       .sort((first, second) => new Date(second.treatmentDate || second.updatedAt || 0) - new Date(first.treatmentDate || first.updatedAt || 0));
-  }, [dentistSearch, records, selectedPatientId]);
+  }, [dentistSearch, records, selectedPatientId, selectedAppointmentId]);
   const activeRecord = dentistRecords[Math.min(activeRecordIndex, Math.max(dentistRecords.length - 1, 0))];
   const dentistVisits = useMemo(() => normalizeRecordVisits(activeRecord), [activeRecord]);
   const activeDentistVisit = dentistVisits.find((visit) => visit.visitNumber === activeVisit) || dentistVisits[dentistVisits.length - 1];

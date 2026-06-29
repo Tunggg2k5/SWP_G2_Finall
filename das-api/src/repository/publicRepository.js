@@ -11,7 +11,7 @@ const publicDentistProjection =
   "fullName email phone avatar avatarUrl yearsOfExperience bio role status createdAt";
 
 export function findActiveServices() {
-  return findMany(COLLECTIONS.dentalServices, { isActive: true }, { sort: { name: 1 } });
+  return findMany(COLLECTIONS.dentalServices, { isActive: { $ne: false } }, { sort: { name: 1 } });
 }
 
 export async function findClinicInformation() {
@@ -74,7 +74,7 @@ export async function findActiveDentistById(id) {
 }
 
 export async function findActiveRooms() {
-  const rooms = await findMany(COLLECTIONS.clinicRooms, { isActive: true }, { sort: { name: 1 } });
+  const rooms = await findMany(COLLECTIONS.clinicRooms, { isActive: { $ne: false } }, { sort: { name: 1 } });
   await populate(rooms, {
     path: "assignedDentist",
     select: "fullName avatarUrl yearsOfExperience bio phone"

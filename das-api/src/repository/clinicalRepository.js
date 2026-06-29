@@ -88,7 +88,7 @@ export async function findClinicalRooms() {
 }
 
 export function findActiveDentalServices() {
-  return findMany(COLLECTIONS.dentalServices, { isActive: true }, { sort: { name: 1 } });
+  return findMany(COLLECTIONS.dentalServices, { isActive: { $ne: false } }, { sort: { name: 1 } });
 }
 
 export async function findStaffSchedules(query, limit = 60) {
@@ -161,7 +161,7 @@ export async function findAppointmentWithService(appointmentId) {
 export function findAssignedDentistRoom(dentistId) {
   return findOne(
     COLLECTIONS.clinicRooms,
-    { assignedDentist: toObjectId(dentistId), isActive: true },
+    { assignedDentist: toObjectId(dentistId), isActive: { $ne: false } },
     "_id"
   );
 }

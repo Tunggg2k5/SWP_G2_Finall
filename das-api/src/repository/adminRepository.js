@@ -241,6 +241,28 @@ export function createUser(data) {
   });
 }
 
+export function findUserByPhone(phone) {
+  return findOne(COLLECTIONS.users, { phone });
+}
+
+export function findUserByEmail(email) {
+  return findOne(COLLECTIONS.users, { email });
+}
+
+export function findDuplicatePhone(phone, excludedUserId) {
+  return findOne(COLLECTIONS.users, {
+    phone,
+    _id: { $ne: toObjectId(excludedUserId) }
+  });
+}
+
+export function findDuplicateEmail(email, excludedUserId) {
+  return findOne(COLLECTIONS.users, {
+    email,
+    _id: { $ne: toObjectId(excludedUserId) }
+  });
+}
+
 export function findUserById(userId) {
   return findById(COLLECTIONS.users, userId);
 }

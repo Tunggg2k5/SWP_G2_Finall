@@ -38,7 +38,7 @@ export function findDentistServicesByService(serviceId) {
 
 export async function findActiveRoomsWithDentists() {
   const rooms = await findMany(COLLECTIONS.clinicRooms, {
-    isActive: true,
+    isActive: { $ne: false },
     status: { $ne: "maintenance" }
   });
   await populate(rooms, {

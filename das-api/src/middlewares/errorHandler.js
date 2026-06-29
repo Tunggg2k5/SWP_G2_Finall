@@ -4,6 +4,14 @@ export function notFound(req, _res, next) {
   next(err);
 }
 
+function duplicateMessageFromKey(keyValue = {}) {
+  const fields = Object.keys(keyValue);
+  if (fields.includes("phone")) return "Số điện thoại đã tồn tại.";
+  if (fields.includes("email")) return "Email đã tồn tại.";
+  if (fields.includes("name")) return "Tên đã tồn tại.";
+  return "Dữ liệu đã tồn tại.";
+}
+
 export function errorHandler(err, _req, res, _next) {
   let statusCode = err.statusCode || err.status || 500;
   let message = statusCode === 500 ? "Lỗi hệ thống. Vui lòng thử lại sau." : err.message;
@@ -11,19 +19,19 @@ export function errorHandler(err, _req, res, _next) {
 
   if (err.name === "ZodError") {
     statusCode = 400;
-    message = "Dữ liệu không hợp lệ";
+    message = "Dữ liệu không hợp lệ.";
     details = err.issues;
   }
 
   if (err.code === 11000) {
     statusCode = 409;
-    message = "Dữ liệu đã tồn tại";
+    message = duplicateMessageFromKey(err.keyValue);
     details = err.keyValue;
   }
 
   if (err.name === "CastError") {
     statusCode = 400;
-    message = "Mã dữ liệu không hợp lệ";
+    message = "Mã dữ liệu không hợp lệ.";
     details = { path: err.path };
   }
 

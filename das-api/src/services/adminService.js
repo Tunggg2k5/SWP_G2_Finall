@@ -173,6 +173,26 @@ async function createRoleProfile(user, data) {
   }
 }
 
+async function validateUserContactUniqueness(data, excludedUserId) {
+  if (data.phone) {
+    const duplicatePhone = excludedUserId
+      ? await adminRepository.findDuplicatePhone(data.phone, excludedUserId)
+      : await adminRepository.findUserByPhone(data.phone);
+    if (duplicatePhone) {
+      throwHttpError("Số điện thoại đã tồn tại.", 409);
+    }
+  }
+
+  if (data.email) {
+    const duplicateEmail = excludedUserId
+      ? await adminRepository.findDuplicateEmail(data.email, excludedUserId)
+      : await adminRepository.findUserByEmail(data.email);
+    if (duplicateEmail) {
+      throwHttpError("Email đã tồn tại.", 409);
+    }
+  }
+}
+
 export async function buildAdminStats() {
   const [
     appointmentStats,
@@ -392,6 +412,8 @@ export async function getPatientStatistics(query) {
 
 export async function createUser(body) {
   const data = createAdminUserSchema.parse(body);
+  await validateUserContactUniqueness(data);
+
   const role = await adminRepository.ensureRole({
     roleName: data.role,
     parentRoleName: ROLE_HIERARCHY[data.role]?.parent || null,
@@ -433,6 +455,8 @@ export async function resetUserPassword(userId, body) {
 
 export async function updateUser(userId, body) {
   const data = updateAdminUserSchema.parse(body);
+  await validateUserContactUniqueness(data, userId);
+
   const user = await adminRepository.updateUser(userId, data);
 
   if (!user) {

@@ -82,7 +82,7 @@ export function findReceptionPatients(filter, limit = 50) {
 }
 
 export function findActiveServices() {
-  return findMany(COLLECTIONS.dentalServices, { isActive: true }, { sort: { name: 1 } });
+  return findMany(COLLECTIONS.dentalServices, { isActive: { $ne: false } }, { sort: { name: 1 } });
 }
 
 export async function findConsultationRequests(query = {}, limit = 100) {

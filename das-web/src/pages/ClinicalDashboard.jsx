@@ -85,6 +85,7 @@ export default function ClinicalDashboard() {
           ? current.appointmentId
           : ""
       }));
+      window.dispatchEvent(new Event("das:refresh-badges"));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -428,13 +429,12 @@ export default function ClinicalDashboard() {
 
 function getPatientTreatmentRecords(records, appointment) {
   if (!appointment) return [];
-  const appointmentPatientId = appointment.patient?._id || appointment.patient;
-  return records
-    .filter((record) => {
-      const recordPatientId = record.patient?._id || record.patient;
-      return recordPatientId?.toString?.() === appointmentPatientId?.toString?.();
-    })
-    .sort((first, second) => new Date(second.updatedAt || second.treatmentDate || 0) - new Date(first.updatedAt || first.treatmentDate || 0));
+  const appointmentId = appointment._id?.toString?.();
+  const exactRecords = records.filter((record) => {
+    const recordAppointmentId = (record.appointment?._id || record.appointment)?.toString?.();
+    return recordAppointmentId && appointmentId && recordAppointmentId === appointmentId;
+  });
+  return exactRecords.sort((first, second) => new Date(second.updatedAt || second.treatmentDate || 0) - new Date(first.updatedAt || first.treatmentDate || 0));
 }
 
 function normalizeTreatmentVisits(record) {

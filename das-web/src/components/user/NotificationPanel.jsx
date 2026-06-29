@@ -12,18 +12,10 @@ export default function NotificationPanel({ notifications, onClose, onDelete, on
           <X size={18} />
         </button>
       </div>
-      {notifications.length > 0 && (
-        <div className="notification-actions">
-          <button className="button small ghost" onClick={onDeleteAll} type="button">
-            <Trash2 size={15} />
-            Xóa tất cả
-          </button>
-        </div>
-      )}
       <div className="notification-popover-list">
         {notifications.length ? (
           notifications.map((item) => (
-            <div className={`notification-card ${item.isRead ? "read" : ""}`} key={item._id}>
+            <div className={`notification-card ${item.isRead ? "read" : "unread"}`} key={item._id}>
               <button className="notification-card-main" onClick={() => onMarkRead(item)} type="button">
                 <span className="notification-avatar">{userInitial}</span>
                 <span>
@@ -41,6 +33,14 @@ export default function NotificationPanel({ notifications, onClose, onDelete, on
           <div className="notification-empty">Chưa có thông báo mới.</div>
         )}
       </div>
+      {notifications.length > 0 && (
+        <div className="notification-actions bottom">
+          <button className="button small ghost" onClick={onDeleteAll} type="button">
+            <Trash2 size={15} />
+            Xóa tất cả
+          </button>
+        </div>
+      )}
     </div>
   );
 }

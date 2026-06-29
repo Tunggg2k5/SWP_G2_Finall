@@ -121,7 +121,15 @@ export default function AppLayout() {
   useEffect(() => {
     if (!user) return undefined;
     const refresh = window.setInterval(() => loadNavBadges(user.role), 60000);
-    return () => window.clearInterval(refresh);
+    function refreshBadges() {
+      loadNavBadges(user.role);
+      loadNotifications();
+    }
+    window.addEventListener("das:refresh-badges", refreshBadges);
+    return () => {
+      window.clearInterval(refresh);
+      window.removeEventListener("das:refresh-badges", refreshBadges);
+    };
   }, [user?._id, user?.role]);
 
   useEffect(() => {
@@ -377,10 +385,7 @@ export default function AppLayout() {
               <button
                 className="top-notification-button"
                 onClick={() => {
-                  setShowNotifications((value) => {
-                    if (!value) markAllNotificationsRead();
-                    return !value;
-                  });
+                  setShowNotifications((value) => !value);
                   setShowAccountMenu(false);
                 }}
                 ref={notificationButtonRef}

@@ -453,6 +453,7 @@ export default function AdminDashboard() {
   }
 
   async function loadRevenueReport() {
+    if (!validateReportRange()) return;
     try {
       setError("");
       setMessage("");
@@ -465,6 +466,7 @@ export default function AdminDashboard() {
   }
 
   async function loadPatientStatistics() {
+    if (!validateReportRange()) return;
     try {
       setError("");
       setMessage("");
@@ -474,6 +476,18 @@ export default function AdminDashboard() {
     } catch (err) {
       setError(getErrorMessage(err));
     }
+  }
+
+  function validateReportRange() {
+    if (!reportFilters.startDate || !reportFilters.endDate) {
+      setError("Chọn đầy đủ từ ngày và đến ngày.");
+      return false;
+    }
+    if (reportFilters.startDate > reportFilters.endDate) {
+      setError("Từ ngày không được lớn hơn đến ngày.");
+      return false;
+    }
+    return true;
   }
 
   const assignableUsers = users.filter((user) => staffRoles.includes(user.role));

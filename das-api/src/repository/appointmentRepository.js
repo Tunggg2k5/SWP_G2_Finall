@@ -179,5 +179,5 @@ export async function deleteAppointmentCascade(appointment) {
 }
 
 export function findActivePaymentServices() {
-  return findMany(COLLECTIONS.dentalServices, { isActive: true });
+  return findMany(COLLECTIONS.dentalServices, { isActive: { $ne: false } });
 }
