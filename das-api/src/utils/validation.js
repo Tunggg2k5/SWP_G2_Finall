@@ -63,8 +63,7 @@ export const dateInputSchema = z
   .refine((value) => Boolean(parseDateInput(value)), "Ngày không hợp lệ.");
 
 export const futureDateInputSchema = dateInputSchema
-  .refine((value) => parseDateInput(value) >= todayStart(), "Ngày không được ở quá khứ.")
-  .refine((value) => parseDateInput(value).getDay() !== 0, "Phòng khám không làm việc vào Chủ nhật.");
+  .refine((value) => parseDateInput(value) >= todayStart(), "Ngày không được ở quá khứ.");
 
 export const optionalFutureDateInputSchema = z.preprocess(emptyToUndefined, futureDateInputSchema.optional());
 

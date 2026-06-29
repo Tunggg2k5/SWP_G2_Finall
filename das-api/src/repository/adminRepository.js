@@ -1,5 +1,5 @@
-import { getCollection, toObjectId } from "../config/mongodb.js";
-import { COLLECTIONS } from "../models/collections.js";
+﻿import { getCollection, toObjectId } from "../config/mongodb.js";
+import { COLLECTIONS } from "../models/index.js";
 import {
   findById,
   findMany,
@@ -7,6 +7,7 @@ import {
   insertDocuments,
   normalizeIdFields,
   populate,
+  removeById,
   updateById,
   updateOneAndReturn
 } from "./mongoRepository.js";
@@ -104,13 +105,11 @@ export function findUsers(query = {}, limit = 200) {
 }
 
 export function findDashboardServices() {
-  return findMany(COLLECTIONS.dentalServices, { isActive: true }, {
-    sort: { isActive: -1, name: 1 }
-  });
+  return findMany(COLLECTIONS.dentalServices, {}, { sort: { name: 1 } });
 }
 
 export async function findDashboardRooms() {
-  const rooms = await findMany(COLLECTIONS.clinicRooms, { isActive: { $ne: false } }, { sort: { name: 1 } });
+  const rooms = await findMany(COLLECTIONS.clinicRooms, {}, { sort: { name: 1 } });
   await populate(rooms, [
     { path: "assignedDentist", select: roomDentistSelect },
     { path: "assignedNurse", select: roomNurseSelect }
@@ -289,10 +288,7 @@ export function createAdminProfile(data) {
 export function createDentalService(data) {
   return insertDocuments(COLLECTIONS.dentalServices, {
     transitionTime: 10,
-    price: 0,
-    requiresPrepayment: true,
-    isConsultation: false,
-    isActive: true,
+    price: "0",
     ...data
   });
 }
@@ -301,8 +297,18 @@ export function updateDentalService(serviceId, data) {
   return updateById(COLLECTIONS.dentalServices, serviceId, data);
 }
 
+export function deleteDentalService(serviceId) {
+  return removeById(COLLECTIONS.dentalServices, serviceId);
+}
+
 export function findClinicRoomByName(name) {
   return findOne(COLLECTIONS.clinicRooms, { name });
+}
+
+export function findClinicRoomAssignmentConflict(field, staffId, excludeRoomId) {
+  const query = { [field]: toObjectId(staffId) };
+  if (excludeRoomId) query._id = { $ne: excludeRoomId };
+  return findOne(COLLECTIONS.clinicRooms, query);
 }
 
 export function createClinicRoom(data) {
@@ -310,7 +316,6 @@ export function createClinicRoom(data) {
     roomType: "Phòng điều trị nha khoa",
     equipment: [],
     status: "available",
-    isActive: true,
     ...data,
     assignedDentist: data.assignedDentist ? toObjectId(data.assignedDentist) : undefined,
     assignedNurse: data.assignedNurse ? toObjectId(data.assignedNurse) : undefined
@@ -338,6 +343,10 @@ export async function updateClinicRoom(roomId, data) {
     { path: "assignedNurse", select: roomNurseSelect }
   ]);
   return room;
+}
+
+export function deleteClinicRoom(roomId) {
+  return removeById(COLLECTIONS.clinicRooms, roomId);
 }
 
 export function findScheduleAssignmentUser(userId) {

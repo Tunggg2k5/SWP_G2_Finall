@@ -1,5 +1,5 @@
-import { getCollection, toObjectId } from "../config/mongodb.js";
-import { COLLECTIONS } from "../models/collections.js";
+﻿import { getCollection, toObjectId } from "../config/mongodb.js";
+import { COLLECTIONS } from "../models/index.js";
 import {
   findById,
   findMany,
@@ -97,6 +97,10 @@ export function createPatientNotification(data) {
     isRead: false,
     ...data
   });
+}
+
+export function findActiveReceptionists() {
+  return findMany(COLLECTIONS.users, { role: "receptionist", status: "active" }, { projection: "_id fullName", limit: 100 });
 }
 
 export async function findInvoiceByAppointment(appointmentId) {

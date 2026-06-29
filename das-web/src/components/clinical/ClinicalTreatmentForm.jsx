@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { ClipboardPenLine } from "lucide-react";
 import StatusBadge from "../StatusBadge.jsx";
 import { formatDateTime } from "../../utils/format.js";
@@ -215,6 +215,10 @@ export default function ClinicalTreatmentForm({
             <label className="field wide">
               <span>Chẩn đoán</span>
               <textarea disabled={isDentist} value={form.diagnosis} onChange={(event) => onChange("diagnosis", event.target.value)} rows="3" />
+            </label>
+            <label className="field wide">
+              <span>Tiền sử bệnh án</span>
+              <textarea disabled={isDentist} value={form.medicalHistory || ""} onChange={(event) => onChange("medicalHistory", event.target.value)} rows="3" />
             </label>
             <label className="field wide">
               <span>Điều trị đã thực hiện</span>

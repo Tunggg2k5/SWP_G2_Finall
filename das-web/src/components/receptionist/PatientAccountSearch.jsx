@@ -1,5 +1,6 @@
 import { KeyRound, Search } from "lucide-react";
 import EmptyState from "../EmptyState.jsx";
+import PasswordField from "../PasswordField.jsx";
 
 export default function PatientAccountSearch({
   loading,
@@ -36,8 +37,7 @@ export default function PatientAccountSearch({
                 <strong>{patient.fullName}</strong>
                 <span>{patient.phone || "Chưa có SĐT"}</span>
               </div>
-              <input
-                type="password"
+              <PasswordField
                 value={resetPasswords[patient._id] || ""}
                 onChange={(event) => setResetPasswords((current) => ({ ...current, [patient._id]: event.target.value }))}
                 placeholder="Mặc định: nhakhoa2026"

@@ -25,7 +25,7 @@ function sameId(left, right) {
 function buildScheduleQuery(user, date, scopeByUser = true) {
   const visibleStatuses = user.role === "admin"
     ? ["scheduled", "confirmed", "checked_in", "in_treatment"]
-    : ["checked_in", "in_treatment"];
+    : ["scheduled", "confirmed", "checked_in", "in_treatment"];
   const query = { status: { $in: visibleStatuses } };
   if (scopeByUser && user.role === "dentist") query.dentist = user._id;
   if (scopeByUser && user.role === "nurse") query.nurse = user._id;
@@ -69,6 +69,7 @@ function legacyVisitFromRecord(record) {
   const hasLegacyData = [
     record.vitalSigns,
     record.diagnosis,
+    record.medicalHistory,
     record.treatmentResult,
     record.treatmentNote,
     record.treatmentPlan,
@@ -81,6 +82,7 @@ function legacyVisitFromRecord(record) {
     visitNumber: 1,
     vitalSigns: record.vitalSigns || {},
     diagnosis: record.diagnosis || "",
+    medicalHistory: record.medicalHistory || "",
     treatmentResult: record.treatmentResult || "",
     treatmentNote: record.treatmentNote || "",
     treatmentPlan: record.treatmentPlan || "",
@@ -109,6 +111,7 @@ function buildVisitPayload(data, visitNumber, user) {
     visitNumber,
     vitalSigns: data.vitalSigns || {},
     diagnosis: data.diagnosis || "",
+    medicalHistory: data.medicalHistory || "",
     treatmentResult: data.treatmentResult || "",
     treatmentNote: data.treatmentNote || "",
     treatmentPlan: data.treatmentPlan || "",
@@ -233,7 +236,7 @@ export async function upsertAppointmentTreatmentRecord(user, appointmentId, body
     status: "active"
   };
 
-  for (const field of ["vitalSigns", "diagnosis", "treatmentResult", "treatmentNote", "treatmentPlan", "prescription", "aftercareInstructions"]) {
+  for (const field of ["vitalSigns", "diagnosis", "medicalHistory", "treatmentResult", "treatmentNote", "treatmentPlan", "prescription", "aftercareInstructions"]) {
     if (data[field] !== undefined) updateFields[field] = data[field];
   }
 

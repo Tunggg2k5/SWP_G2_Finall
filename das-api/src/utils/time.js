@@ -1,4 +1,4 @@
-export const WORKING_DAYS = [1, 2, 3, 4, 5, 6];
+export const WORKING_DAYS = [0, 1, 2, 3, 4, 5, 6];
 export const APPOINTMENT_SLOT_MINUTES = 30;
 export const TURNOVER_MINUTES = 10;
 export const CLINIC_UTC_OFFSET_MINUTES = 7 * 60;

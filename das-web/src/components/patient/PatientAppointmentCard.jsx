@@ -2,7 +2,7 @@ import { useState } from "react";
 import StatusBadge from "../StatusBadge.jsx";
 import { formatDateTime, todayInput } from "../../utils/format.js";
 import { bookingSlotOptions } from "../../pages/BookingPage.jsx";
-import { clinicDateInput, formatSlotWithDate, getAppointmentSlot, shouldDisplayExactTime } from "../../utils/appointmentSlots.js";
+import { clinicDateInput, formatSlotWithDate, getAppointmentSlot } from "../../utils/appointmentSlots.js";
 import RescheduleAppointmentModal from "./RescheduleAppointmentModal.jsx";
 
 const cancelReasons = [
@@ -12,6 +12,8 @@ const cancelReasons = [
   "Đặt nhầm lịch",
   "Lý do khác"
 ];
+
+const arrangedStatuses = new Set(["scheduled", "confirmed", "checked_in", "in_treatment", "completed"]);
 
 export default function PatientAppointmentCard({
   appointment,
@@ -32,8 +34,8 @@ export default function PatientAppointmentCard({
     time: getAppointmentSlot(appointment.startAt)?.value || bookingSlotOptions[0].value,
     dentistId: appointment.dentist?._id || dentistOptions[0]?._id || ""
   };
-  const scheduleText = shouldDisplayExactTime(appointment.status)
-    ? `Giờ khám: ${formatDateTime(appointment.startAt)}`
+  const scheduleText = arrangedStatuses.has(appointment.status)
+    ? `Giờ đến: ${formatDateTime(appointment.checkInTime || appointment.startAt)}`
     : `Slot đã đặt: ${formatSlotWithDate(appointment.startAt)}`;
 
   function openRescheduleForm() {
@@ -91,9 +93,7 @@ export default function PatientAppointmentCard({
               <div className="patient-reschedule-box">
                 <select value={cancelReason} onChange={(event) => setCancelReason(event.target.value)}>
                   {cancelReasons.map((reason) => (
-                    <option key={reason} value={reason}>
-                      {reason}
-                    </option>
+                    <option key={reason} value={reason}>{reason}</option>
                   ))}
                 </select>
                 {cancelReason === "Lý do khác" && (

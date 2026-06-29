@@ -1,5 +1,5 @@
-import { getCollection, isObjectId, toObjectId } from "../config/mongodb.js";
-import { RELATION_COLLECTIONS } from "../models/collections.js";
+import { getCollection, getModel, isObjectId, toObjectId } from "../config/mongodb.js";
+import { RELATION_COLLECTIONS } from "../models/index.js";
 
 export function normalizeIdFields(filter = {}, fields = []) {
   const normalized = { ...filter };
@@ -34,18 +34,19 @@ export function parseProjection(select) {
 }
 
 export async function findMany(collectionName, filter = {}, options = {}) {
-  const cursor = getCollection(collectionName).find(filter, {
-    projection: parseProjection(options.projection)
-  });
-  if (options.sort) cursor.sort(options.sort);
-  if (options.limit) cursor.limit(options.limit);
-  return cursor.toArray();
+  let query = getModel(collectionName).find(filter);
+  const projection = parseProjection(options.projection);
+  if (projection) query = query.select(projection);
+  if (options.sort) query = query.sort(options.sort);
+  if (options.limit) query = query.limit(options.limit);
+  return query.lean();
 }
 
 export function findOne(collectionName, filter = {}, projection) {
-  return getCollection(collectionName).findOne(filter, {
-    projection: parseProjection(projection)
-  });
+  let query = getModel(collectionName).findOne(filter);
+  const parsedProjection = parseProjection(projection);
+  if (parsedProjection) query = query.select(parsedProjection);
+  return query.lean();
 }
 
 export function findById(collectionName, value, projection) {
@@ -53,17 +54,15 @@ export function findById(collectionName, value, projection) {
 }
 
 export async function insertDocuments(collectionName, input) {
-  const now = new Date();
+  const Model = getModel(collectionName);
   if (Array.isArray(input)) {
     if (!input.length) return [];
-    const documents = input.map((item) => ({ ...item, createdAt: item.createdAt || now, updatedAt: now }));
-    const result = await getCollection(collectionName).insertMany(documents);
-    return documents.map((document, index) => ({ ...document, _id: result.insertedIds[index] }));
+    const documents = await Model.insertMany(input, { ordered: true });
+    return documents.map((document) => document.toObject());
   }
 
-  const document = { ...input, createdAt: input.createdAt || now, updatedAt: now };
-  const result = await getCollection(collectionName).insertOne(document);
-  return { ...document, _id: result.insertedId };
+  const document = await Model.create(input);
+  return document.toObject();
 }
 
 export async function updateOneAndReturn(collectionName, filter, update, options = {}) {
@@ -78,10 +77,13 @@ export async function updateOneAndReturn(collectionName, filter, update, options
     };
   }
 
-  return getCollection(collectionName).findOneAndUpdate(filter, updateDocument, {
-    upsert: options.upsert,
-    returnDocument: "after"
-  });
+  return getModel(collectionName)
+    .findOneAndUpdate(filter, updateDocument, {
+      upsert: options.upsert,
+      new: true,
+      setDefaultsOnInsert: true
+    })
+    .lean();
 }
 
 export function updateById(collectionName, value, update, options = {}) {
@@ -89,11 +91,11 @@ export function updateById(collectionName, value, update, options = {}) {
 }
 
 export function deleteAll(collectionName) {
-  return getCollection(collectionName).deleteMany({});
+  return getModel(collectionName).deleteMany({});
 }
 
 export function removeById(collectionName, value) {
-  return getCollection(collectionName).findOneAndDelete({ _id: toObjectId(value) });
+  return getModel(collectionName).findOneAndDelete({ _id: toObjectId(value) }).lean();
 }
 
 function relationId(value) {

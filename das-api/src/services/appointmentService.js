@@ -359,6 +359,18 @@ export async function updateAppointmentStatus(appointmentId, user, body) {
   if (["completed", "no_show", "cancelled", "rejected"].includes(data.status)) {
     await appointmentRepository.updateAppointmentRoomStatus(normalizeId(appointment.room), "available");
   }
+  if (data.status === "completed") {
+    const receptionists = await appointmentRepository.findActiveReceptionists();
+    await Promise.all(receptionists.map((receptionist) =>
+      appointmentRepository.createPatientNotification({
+        user: receptionist._id,
+        title: "Lịch khám đã hoàn tất",
+        message: `Y tá đã hoàn tất lịch khám của ${appointment.patient?.fullName || "bệnh nhân"} và gửi dịch vụ đã thực hiện để tạo hóa đơn.`,
+        type: "invoice_ready",
+        isRead: false
+      })
+    ));
+  }
   await notifyPatientOfReceptionDecision(appointment, data.status);
   await appointmentRepository.populateAppointment(appointment);
   return appointment;

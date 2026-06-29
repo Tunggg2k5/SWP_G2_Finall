@@ -93,6 +93,11 @@ export async function updateClinicRoom(req, res) {
   res.json({ room });
 }
 
+export async function deleteClinicRoom(req, res) {
+  const room = await adminService.deleteClinicRoom(req.params.id);
+  res.json({ room });
+}
+
 export async function updateReviewVisibility(req, res) {
   const review = await adminService.updateReviewVisibility(req.params.id, req.body);
   res.json({ review });

@@ -1,10 +1,10 @@
-import {
+﻿import {
   closeMongoDB,
   connectMongoDB,
   getCollection
 } from "../config/mongodb.js";
 import { getInheritanceChain, ROLE_HIERARCHY } from "../config/roleHierarchy.js";
-import { COLLECTIONS } from "../models/collections.js";
+import { COLLECTIONS } from "../models/index.js";
 import { insertDocuments } from "../repository/mongoRepository.js";
 import { hashPassword } from "./password.js";
 import { addMinutes, combineDateAndTime, isWorkingDate, toDateInputValue } from "./time.js";
@@ -57,7 +57,7 @@ async function createRoles() {
 
 async function createWorkingCalendar() {
   const workingHours = [];
-  for (const dayOfWeek of [1, 2, 3, 4, 5, 6]) {
+  for (const dayOfWeek of [0, 1, 2, 3, 4, 5, 6]) {
     workingHours.push(
       {
         dayOfWeek,

@@ -1,4 +1,4 @@
-import {
+﻿import {
   BarChart3,
   Bell,
   CalendarDays,
@@ -44,7 +44,6 @@ const adminTabs = [
   { id: "users", label: "Tài khoản", icon: UsersRound },
   { id: "services", label: "Dịch vụ", icon: Settings2 },
   { id: "rooms", label: "Phòng khám", icon: DoorOpen },
-  { id: "workingHours", label: "Giờ làm", icon: CalendarDays },
   { id: "reviews", label: "Đánh giá", icon: Star }
 ];
 

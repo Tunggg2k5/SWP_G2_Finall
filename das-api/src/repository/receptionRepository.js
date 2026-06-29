@@ -1,5 +1,5 @@
-import { getCollection, toObjectId } from "../config/mongodb.js";
-import { COLLECTIONS } from "../models/collections.js";
+﻿import { getCollection, toObjectId } from "../config/mongodb.js";
+import { COLLECTIONS } from "../models/index.js";
 import {
   findMany,
   findOne,

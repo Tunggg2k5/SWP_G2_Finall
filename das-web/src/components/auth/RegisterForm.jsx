@@ -2,6 +2,7 @@ import { Home, LockKeyhole, Mail, Phone, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../redux/AuthContext.jsx";
+import PasswordField from "../PasswordField.jsx";
 import { getErrorMessage } from "../../utils/api.js";
 import { firstError, requireValue, validateEmail, validatePassword, validatePhone } from "../../utils/validation.js";
 
@@ -108,7 +109,7 @@ export default function RegisterForm() {
           <span>Mật khẩu</span>
           <div className="input-icon">
             <LockKeyhole size={18} />
-            <input type="password" value={form.password} onChange={(e) => update("password", e.target.value)} required minLength={8} maxLength={72} />
+            <PasswordField value={form.password} onChange={(e) => update("password", e.target.value)} required minLength={8} maxLength={72} />
           </div>
         </label>
 
@@ -116,8 +117,7 @@ export default function RegisterForm() {
           <span>Nhập lại mật khẩu</span>
           <div className="input-icon">
             <LockKeyhole size={18} />
-            <input
-              type="password"
+            <PasswordField
               value={form.confirmPassword}
               onChange={(e) => update("confirmPassword", e.target.value)}
               required

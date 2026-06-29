@@ -17,16 +17,12 @@ export default function PatientAppointmentList({
   updateRescheduleForm
 }) {
   const [filterDate, setFilterDate] = useState("");
+  const source = historyOnly ? appointmentHistory : appointments;
   const visibleAppointments = useMemo(() => {
-    return (historyOnly ? appointmentHistory : appointments)
+    return source
       .filter((appointment) => !filterDate || clinicDateInput(appointment.startAt) === filterDate)
       .sort(compareAppointmentsNewestFirst);
-  }, [appointmentHistory, appointments, filterDate, historyOnly]);
-  const visibleHistory = useMemo(() => {
-    return appointmentHistory
-      .filter((appointment) => !filterDate || clinicDateInput(appointment.startAt) === filterDate)
-      .sort(compareAppointmentsNewestFirst);
-  }, [appointmentHistory, filterDate]);
+  }, [source, filterDate]);
 
   return (
     <section className="panel" id="appointments">
@@ -67,25 +63,6 @@ export default function PatientAppointmentList({
           title={historyOnly ? "Chưa có lịch sử lịch hẹn" : "Chưa có lịch hẹn"}
           text={filterDate ? "Không có lịch hẹn trong ngày đang lọc." : historyOnly ? "Các lịch đã hoàn tất, bị từ chối, hủy hoặc vắng mặt sẽ hiển thị tại đây." : "Bạn có thể đặt lịch mới tại màn Đặt lịch."}
         />
-      )}
-      {!historyOnly && !loading && visibleHistory.length > 0 && (
-        <div className="appointment-history-section">
-          <h3>Lịch sử lịch hẹn</h3>
-          <div className="appointment-list">
-            {visibleHistory.map((appointment) => (
-              <PatientAppointmentCard
-                appointment={appointment}
-                canModifyAppointment={canModifyAppointment}
-                cancelAppointment={cancelAppointment}
-                dentistOptions={dentistOptions}
-                key={appointment._id}
-                rescheduleAppointment={rescheduleAppointment}
-                rescheduleForm={rescheduleForms[appointment._id]}
-                updateRescheduleForm={updateRescheduleForm}
-              />
-            ))}
-          </div>
-        </div>
       )}
     </section>
   );

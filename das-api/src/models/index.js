@@ -1,3 +1,57 @@
+import AdminProfile from "./AdminProfile.js";
+import Appointment from "./Appointment.js";
+import AppointmentSlot from "./AppointmentSlot.js";
+import ClinicRoom from "./ClinicRoom.js";
+import ClinicSetting from "./ClinicSetting.js";
+import ClinicWorkingHour from "./ClinicWorkingHour.js";
+import ConsultationRequest from "./ConsultationRequest.js";
+import DentalService from "./DentalService.js";
+import Dentist from "./Dentist.js";
+import DentistService from "./DentistService.js";
+import Invoice from "./Invoice.js";
+import Notification from "./Notification.js";
+import Nurse from "./Nurse.js";
+import Patient from "./Patient.js";
+import Payment from "./Payment.js";
+import Prescription from "./Prescription.js";
+import Receptionist from "./Receptionist.js";
+import Review from "./Review.js";
+import Role from "./Role.js";
+import RoomStatus from "./RoomStatus.js";
+import StaffSchedule from "./StaffSchedule.js";
+import TimeSlot from "./TimeSlot.js";
+import TreatmentPlan from "./TreatmentPlan.js";
+import TreatmentRecord from "./TreatmentRecord.js";
+import User from "./User.js";
+
+export {
+  AdminProfile,
+  Appointment,
+  AppointmentSlot,
+  ClinicRoom,
+  ClinicSetting,
+  ClinicWorkingHour,
+  ConsultationRequest,
+  DentalService,
+  Dentist,
+  DentistService,
+  Invoice,
+  Notification,
+  Nurse,
+  Patient,
+  Payment,
+  Prescription,
+  Receptionist,
+  Review,
+  Role,
+  RoomStatus,
+  StaffSchedule,
+  TimeSlot,
+  TreatmentPlan,
+  TreatmentRecord,
+  User
+};
+
 export const COLLECTIONS = Object.freeze({
   adminProfiles: "adminprofiles",
   appointments: "appointments",
@@ -26,6 +80,34 @@ export const COLLECTIONS = Object.freeze({
   users: "users"
 });
 
+export const MODELS = Object.freeze({
+  [COLLECTIONS.adminProfiles]: AdminProfile,
+  [COLLECTIONS.appointments]: Appointment,
+  [COLLECTIONS.appointmentSlots]: AppointmentSlot,
+  [COLLECTIONS.clinicSettings]: ClinicSetting,
+  [COLLECTIONS.clinicRooms]: ClinicRoom,
+  [COLLECTIONS.clinicWorkingHours]: ClinicWorkingHour,
+  [COLLECTIONS.consultationRequests]: ConsultationRequest,
+  [COLLECTIONS.dentalServices]: DentalService,
+  [COLLECTIONS.dentists]: Dentist,
+  [COLLECTIONS.dentistServices]: DentistService,
+  [COLLECTIONS.invoices]: Invoice,
+  [COLLECTIONS.notifications]: Notification,
+  [COLLECTIONS.nurses]: Nurse,
+  [COLLECTIONS.patients]: Patient,
+  [COLLECTIONS.payments]: Payment,
+  [COLLECTIONS.prescriptions]: Prescription,
+  [COLLECTIONS.receptionists]: Receptionist,
+  [COLLECTIONS.reviews]: Review,
+  [COLLECTIONS.roles]: Role,
+  [COLLECTIONS.roomStatuses]: RoomStatus,
+  [COLLECTIONS.staffSchedules]: StaffSchedule,
+  [COLLECTIONS.timeSlots]: TimeSlot,
+  [COLLECTIONS.treatmentPlans]: TreatmentPlan,
+  [COLLECTIONS.treatmentRecords]: TreatmentRecord,
+  [COLLECTIONS.users]: User
+});
+
 export const COLLECTION_INDEXES = Object.freeze({
   [COLLECTIONS.users]: [
     { key: { email: 1 }, options: { unique: true, sparse: true } },
@@ -45,7 +127,14 @@ export const COLLECTION_INDEXES = Object.freeze({
   [COLLECTIONS.dentistServices]: [{ key: { dentist: 1, service: 1 }, options: { unique: true } }],
   [COLLECTIONS.clinicRooms]: [
     { key: { name: 1 }, options: { unique: true } },
-    { key: { status: 1, isActive: 1 } }
+    {
+      key: { assignedDentist: 1 },
+      options: { unique: true, partialFilterExpression: { assignedDentist: { $type: "objectId" } } }
+    },
+    {
+      key: { assignedNurse: 1 },
+      options: { unique: true, partialFilterExpression: { assignedNurse: { $type: "objectId" } } }
+    }
   ],
   [COLLECTIONS.clinicWorkingHours]: [
     { key: { dayOfWeek: 1, shiftName: 1 }, options: { unique: true } }

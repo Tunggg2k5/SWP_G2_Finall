@@ -48,7 +48,7 @@ export async function payInvoice(invoiceId, patientId) {
     invoice: invoice._id,
     amount: invoice.paidAmount,
     paymentStatus: "paid",
-    paymentMethod: "online"
+    paymentMethod: "bank_transfer"
   });
 
   return paidInvoice;

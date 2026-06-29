@@ -6,6 +6,7 @@ import {
   createUser,
   createWorkingHour,
   deactivateDentalService,
+  deleteClinicRoom,
   exportReports,
   getDashboard,
   getPatientStatistics,
@@ -48,6 +49,7 @@ router.patch("/services/:id", updateDentalService);
 router.delete("/services/:id", deactivateDentalService);
 router.post("/rooms", createClinicRoom);
 router.patch("/rooms/:id", updateClinicRoom);
+router.delete("/rooms/:id", deleteClinicRoom);
 router.patch("/reviews/:id", updateReviewVisibility);
 
 export default router;

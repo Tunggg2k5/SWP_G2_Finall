@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import { env } from "./environment.js";
-import { COLLECTION_INDEXES } from "../models/collections.js";
-import "../models/mongooseModels.js";
+import { COLLECTION_INDEXES, MODELS } from "../models/index.js";
+import "../models/index.js";
 
 let database;
 
@@ -44,8 +44,17 @@ export function getDatabase() {
   return database;
 }
 
+export function getModel(name) {
+  const model = MODELS[name];
+  if (!model) {
+    throw new Error(`Không tìm thấy model Mongoose cho collection ${name}.`);
+  }
+  return model;
+}
+
 export function getCollection(name) {
-  return getDatabase().collection(name);
+  getDatabase();
+  return getModel(name).collection;
 }
 
 export function toObjectId(value) {

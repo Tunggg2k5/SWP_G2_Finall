@@ -66,6 +66,6 @@ export const createAppointmentInvoiceSchema = z.object({
 });
 
 export const appointmentPaymentSchema = z.object({
-  paymentMethod: z.enum(["cash", "card", "bank_transfer", "online"]).default("cash"),
+  paymentMethod: z.enum(["cash", "card", "bank_transfer"]).default("cash"),
   amount: z.coerce.number().positive().optional()
 });

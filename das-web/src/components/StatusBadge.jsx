@@ -1,7 +1,7 @@
 const labels = {
   pending: "Chờ xác nhận",
   scheduled: "Chưa diễn ra",
-  confirmed: "Đang diễn ra",
+  confirmed: "Đã xác nhận",
   waitlisted: "Hàng đợi",
   rejected: "Đã từ chối",
   called: "Đã gọi",
@@ -25,7 +25,7 @@ const labels = {
   in_use: "Đang dùng",
   cleaning: "Vệ sinh",
   maintenance: "Bảo trì",
-  unavailable: "Tạm ngưng",
+  unavailable: "Chưa sẵn sàng",
   paid: "Đã trả",
   unpaid: "Chưa trả",
   partial: "Thanh toán một phần",

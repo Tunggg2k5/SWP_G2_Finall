@@ -11,9 +11,12 @@ import {
 } from "../utils/validation.js";
 
 const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const priceStringSchema = z
+  .union([z.string().trim().min(1), z.coerce.number().min(0)])
+  .transform((value) => String(value));
 
 export const createWorkingHourSchema = z.object({
-  dayOfWeek: z.coerce.number().int().min(1).max(6),
+  dayOfWeek: z.coerce.number().int().min(0).max(6),
   shiftName: nameSchema,
   startTime: timeSchema,
   endTime: timeSchema,
@@ -21,7 +24,7 @@ export const createWorkingHourSchema = z.object({
 });
 
 export const updateWorkingHourSchema = z.object({
-  dayOfWeek: z.coerce.number().int().min(1).max(6).optional(),
+  dayOfWeek: z.coerce.number().int().min(0).max(6).optional(),
   shiftName: nameSchema.optional(),
   startTime: timeSchema.optional(),
   endTime: timeSchema.optional(),
@@ -71,40 +74,27 @@ export const updateAdminUserSchema = z.object({
 export const createDentalServiceSchema = z.object({
   name: nameSchema,
   description: noteSchema,
-  durationMinutes: z.coerce.number().int().min(10).max(480),
-  price: z.union([z.string().trim().min(1), z.coerce.number().min(0)]).transform((value) => String(value)),
-  requiresPrepayment: z.boolean().default(true),
-  isConsultation: z.boolean().default(false)
+  price: priceStringSchema
 });
 
 export const updateDentalServiceSchema = z.object({
   name: nameSchema.optional(),
-  description: noteSchema,
-  durationMinutes: z.coerce.number().int().min(10).max(480).optional(),
-  price: z.union([z.string().trim().min(1), z.coerce.number().min(0)]).transform((value) => String(value)).optional(),
-  requiresPrepayment: z.boolean().optional(),
-  isConsultation: z.boolean().optional(),
-  isActive: z.boolean().optional()
+  description: noteSchema.optional(),
+  price: priceStringSchema.optional()
 });
 
 export const createClinicRoomSchema = z.object({
   name: nameSchema,
-  description: noteSchema,
   equipment: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
   assignedDentist: optionalObjectIdSchema,
-  assignedNurse: optionalObjectIdSchema,
-  status: z.enum(["available", "in_use", "cleaning", "maintenance", "unavailable"]).default("available"),
-  isActive: z.boolean().default(true)
+  assignedNurse: optionalObjectIdSchema
 });
 
 export const updateClinicRoomSchema = z.object({
   name: nameSchema.optional(),
-  description: noteSchema,
   equipment: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
   assignedDentist: optionalObjectIdSchema,
-  assignedNurse: optionalObjectIdSchema,
-  status: z.enum(["available", "in_use", "cleaning", "maintenance", "unavailable"]).optional(),
-  isActive: z.boolean().optional()
+  assignedNurse: optionalObjectIdSchema
 });
 
 export const updateReviewVisibilitySchema = z.object({

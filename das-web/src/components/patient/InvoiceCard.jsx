@@ -5,8 +5,7 @@ import ReviewForm from "./ReviewForm.jsx";
 const paymentMethodLabels = {
   cash: "Tiền mặt",
   bank_transfer: "Chuyển khoản",
-  card: "Thẻ",
-  online: "Online"
+  card: "Thẻ"
 };
 
 export default function InvoiceCard({

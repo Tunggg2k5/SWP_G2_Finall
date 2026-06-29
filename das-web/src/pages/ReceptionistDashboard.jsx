@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Feedback from "../components/Feedback.jsx";
 import BookAppointmentForPatientForm from "../components/receptionist/BookAppointmentForPatientForm.jsx";
@@ -45,7 +45,6 @@ export default function ReceptionistDashboard() {
   const [rescheduleSlots, setRescheduleSlots] = useState({});
   const [rescheduleSlotKeys, setRescheduleSlotKeys] = useState({});
   const [manualSchedules, setManualSchedules] = useState({});
-  const [invoiceAmounts, setInvoiceAmounts] = useState({});
   const [paymentAmounts, setPaymentAmounts] = useState({});
   const [paymentMethods, setPaymentMethods] = useState({});
   const [loading, setLoading] = useState(true);
@@ -232,9 +231,9 @@ export default function ReceptionistDashboard() {
       amount: Number(item.amount || 0)
     }));
     const performedTotal = performedItems.reduce((sum, item) => sum + item.amount, 0);
-    const amount = performedTotal || Number(invoiceAmounts[appointment._id] || 0);
+    const amount = performedTotal;
     if (amount <= 0) {
-      setError("Nhập số tiền bệnh nhân cần thanh toán hoặc chờ y tá xác nhận dịch vụ đã thực hiện.");
+      setError("Chờ y tá xác nhận dịch vụ đã thực hiện trước khi tạo hóa đơn.");
       return;
     }
     if (!window.confirm(`Tạo hóa đơn ${amount.toLocaleString("vi-VN")} VND cho lịch hẹn này?`)) return;
@@ -245,7 +244,6 @@ export default function ReceptionistDashboard() {
         items: performedItems.length ? performedItems : undefined
       });
       setMessage("Đã tạo hóa đơn và gửi tới bệnh nhân.");
-      setInvoiceAmounts((current) => ({ ...current, [appointment._id]: "" }));
       load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -485,15 +483,12 @@ export default function ReceptionistDashboard() {
           checkInAppointments={paymentAppointments}
           date={date}
           generateInvoice={generateInvoice}
-          editInvoice={editInvoice}
-          invoiceAmounts={invoiceAmounts}
           loading={loading}
           processPayment={processPayment}
           paymentAmounts={paymentAmounts}
           paymentMethods={paymentMethods}
           setAppointmentSearch={setAppointmentSearch}
           setDate={setDate}
-          setInvoiceAmounts={setInvoiceAmounts}
           setPaymentAmounts={setPaymentAmounts}
           setPaymentMethods={setPaymentMethods}
         />
@@ -624,3 +619,4 @@ function duplicateBookingInfo(appointment, appointments) {
 function buildSlotKey(slot) {
   return `${slot.startAt}|${slot.room?._id}`;
 }
+

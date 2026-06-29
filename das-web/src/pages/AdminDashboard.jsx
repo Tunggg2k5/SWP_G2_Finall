@@ -1,10 +1,9 @@
-import { BarChart3, CalendarDays, DoorOpen, Settings2, Star, UsersRound } from "lucide-react";
+﻿import { BarChart3, DoorOpen, Settings2, Star, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AccountManagement from "../components/admin/AccountManagement.jsx";
 import AdminReportPanel from "../components/admin/AdminReportPanel.jsx";
 import AdminReviewList from "../components/admin/AdminReviewList.jsx";
-import ClinicWorkingHours from "../components/admin/ClinicWorkingHours.jsx";
 import ClinicRoomManagement from "../components/admin/ClinicRoomManagement.jsx";
 import DentalServiceManagement from "../components/admin/DentalServiceManagement.jsx";
 import StaffScheduleManagement from "../components/admin/StaffScheduleManagement.jsx";
@@ -18,19 +17,10 @@ const adminFeatures = [
   { id: "users", label: "Tài khoản", icon: UsersRound },
   { id: "services", label: "Dịch vụ", icon: Settings2 },
   { id: "rooms", label: "Phòng khám", icon: DoorOpen },
-  { id: "workingHours", label: "Giờ làm", icon: CalendarDays },
   { id: "reviews", label: "Đánh giá", icon: Star }
 ];
 
 const staffRoles = ["dentist", "nurse", "receptionist"];
-const dayNames = {
-  1: "Thứ 2",
-  2: "Thứ 3",
-  3: "Thứ 4",
-  4: "Thứ 5",
-  5: "Thứ 6",
-  6: "Thứ 7"
-};
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 const clinicSessions = [
   { start: "08:00", end: "11:30" },
@@ -40,10 +30,7 @@ const clinicSessions = [
 const defaultServiceForm = {
   name: "",
   description: "",
-  durationMinutes: 30,
-  price: 0,
-  requiresPrepayment: true,
-  isConsultation: false
+  price: ""
 };
 
 const defaultUserForm = {
@@ -56,15 +43,7 @@ const defaultUserForm = {
 const defaultRoomForm = {
   name: "",
   assignedDentist: "",
-  assignedNurse: "",
-  status: "available"
-};
-
-const defaultWorkingHourForm = {
-  dayOfWeek: 1,
-  shiftName: "Ca sáng",
-  startTime: "08:00",
-  endTime: "11:30"
+  assignedNurse: ""
 };
 
 export default function AdminDashboard() {
@@ -75,7 +54,6 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [services, setServices] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [workingHours, setWorkingHours] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [schedulesLoaded, setSchedulesLoaded] = useState(false);
@@ -94,8 +72,6 @@ export default function AdminDashboard() {
   const [editingUser, setEditingUser] = useState(null);
   const [roomForm, setRoomForm] = useState(defaultRoomForm);
   const [editingRoom, setEditingRoom] = useState(null);
-  const [workingHourForm, setWorkingHourForm] = useState(defaultWorkingHourForm);
-  const [editingWorkingHour, setEditingWorkingHour] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
     userId: "",
     timeSlotId: "",
@@ -116,7 +92,6 @@ export default function AdminDashboard() {
       setServices(res.data.services);
       setRooms(res.data.rooms);
       setRoleHierarchy(res.data.roleHierarchy);
-      setWorkingHours(res.data.workingHours);
       setTimeSlots(res.data.timeSlots);
       setReviews(res.data.reviews || []);
       setScheduleForm((current) => ({
@@ -169,8 +144,7 @@ export default function AdminDashboard() {
     const validationError = firstError(
       validateName(serviceForm.name, "Tên dịch vụ"),
       validateNote(serviceForm.description),
-      Number(serviceForm.durationMinutes) >= 10 ? "" : "Thời lượng dịch vụ tối thiểu 10 phút.",
-      Number(serviceForm.price) >= 0 ? "" : "Giá dịch vụ không được âm."
+      String(serviceForm.price || "").trim() ? "" : "Giá tiền là bắt buộc."
     );
     if (validationError) {
       setError(validationError);
@@ -182,8 +156,7 @@ export default function AdminDashboard() {
       setMessage("");
       await api.post("/admin/services", {
         ...serviceForm,
-        durationMinutes: Number(serviceForm.durationMinutes),
-        price: Number(serviceForm.price)
+        price: String(serviceForm.price)
       });
       setServiceForm(defaultServiceForm);
       setMessage("Đã tạo dịch vụ.");
@@ -225,11 +198,7 @@ export default function AdminDashboard() {
       _id: service._id,
       name: service.name || "",
       description: service.description || "",
-      durationMinutes: service.durationMinutes || 30,
-      price: service.price || 0,
-      requiresPrepayment: service.requiresPrepayment !== false,
-      isConsultation: Boolean(service.isConsultation),
-      isActive: service.isActive !== false
+      price: service.price || ""
     });
   }
 
@@ -239,8 +208,7 @@ export default function AdminDashboard() {
     const validationError = firstError(
       validateName(editingService.name, "Tên dịch vụ"),
       validateNote(editingService.description),
-      Number(editingService.durationMinutes) >= 10 ? "" : "Thời lượng dịch vụ tối thiểu 10 phút.",
-      Number(editingService.price) >= 0 ? "" : "Giá dịch vụ không được âm."
+      String(editingService.price || "").trim() ? "" : "Giá tiền là bắt buộc."
     );
     if (validationError) {
       setError(validationError);
@@ -252,11 +220,7 @@ export default function AdminDashboard() {
       await api.patch(`/admin/services/${editingService._id}`, {
         name: editingService.name,
         description: editingService.description,
-        durationMinutes: Number(editingService.durationMinutes),
-        price: String(editingService.price),
-        requiresPrepayment: Boolean(editingService.requiresPrepayment),
-        isConsultation: Boolean(editingService.isConsultation),
-        isActive: Boolean(editingService.isActive)
+        price: String(editingService.price)
       });
       setEditingService(null);
       setMessage("Đã cập nhật dịch vụ.");
@@ -318,12 +282,13 @@ export default function AdminDashboard() {
     });
   }
 
-  async function patchRoom(room, changes = {}) {
+  async function deleteRoom(room) {
+    if (!window.confirm(`Xóa phòng khám ${room.name}?`)) return;
     try {
       setError("");
       setMessage("");
-      await api.patch(`/admin/rooms/${room._id}`, changes);
-      setMessage(changes?.isActive === false ? "Đã xóa phòng khám." : "Đã cập nhật phòng khám.");
+      await api.delete(`/admin/rooms/${room._id}`);
+      setMessage("Đã xóa phòng khám.");
       load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -346,9 +311,7 @@ export default function AdminDashboard() {
         name: editingRoom.name,
         assignedDentist: editingRoom.assignedDentist,
         assignedNurse: editingRoom.assignedNurse,
-        status: editingRoom.status,
-        equipment: parseCommaList(editingRoom.equipmentText),
-        isActive: Boolean(editingRoom.isActive)
+        equipment: parseCommaList(editingRoom.equipmentText)
       });
       setEditingRoom(null);
       setMessage("Đã cập nhật phòng khám.");
@@ -426,86 +389,6 @@ export default function AdminDashboard() {
       setError(getErrorMessage(err));
     }
   }
-
-  async function createWorkingHour(event) {
-    event.preventDefault();
-    const validationError = firstError(
-      validateName(workingHourForm.shiftName, "Tên ca"),
-      validateTimeRange(workingHourForm.startTime, workingHourForm.endTime)
-    );
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    try {
-      setError("");
-      setMessage("");
-      await api.post("/admin/working-hours", {
-        ...workingHourForm,
-        dayOfWeek: Number(workingHourForm.dayOfWeek)
-      });
-      setMessage("Đã thêm giờ làm.");
-      load();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    }
-  }
-
-  function startEditWorkingHour(item) {
-    setEditingWorkingHour({
-      _id: item._id,
-      dayOfWeek: item.dayOfWeek || 1,
-      shiftName: item.shiftName || "",
-      startTime: item.startTime || "08:00",
-      endTime: item.endTime || "11:30",
-      status: item.status || "active"
-    });
-  }
-
-  async function updateWorkingHourDetails(event) {
-    event.preventDefault();
-    if (!editingWorkingHour) return;
-    const validationError = firstError(
-      validateName(editingWorkingHour.shiftName, "Tên ca"),
-      validateTimeRange(editingWorkingHour.startTime, editingWorkingHour.endTime)
-    );
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-    try {
-      setError("");
-      setMessage("");
-      await api.patch(`/admin/working-hours/${editingWorkingHour._id}`, {
-        dayOfWeek: Number(editingWorkingHour.dayOfWeek),
-        shiftName: editingWorkingHour.shiftName,
-        startTime: editingWorkingHour.startTime,
-        endTime: editingWorkingHour.endTime,
-        status: editingWorkingHour.status
-      });
-      setEditingWorkingHour(null);
-      setMessage("Đã cập nhật giờ làm.");
-      load();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    }
-  }
-
-  async function deleteWorkingHour(id) {
-    if (!window.confirm("Xóa giờ làm này?")) return;
-
-    try {
-      setError("");
-      setMessage("");
-      await api.patch(`/admin/working-hours/${id}`, { status: "inactive" });
-      setMessage("Đã xóa giờ làm.");
-      load();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    }
-  }
-
   async function toggleReviewVisibility(review, isHidden) {
     try {
       setError("");
@@ -644,30 +527,13 @@ export default function AdminDashboard() {
           onCreateRoom={createRoom}
           onEditingRoomChange={(next) => setEditingRoom((current) => ({ ...current, ...next }))}
           onRoomFormChange={(next) => setRoomForm((current) => ({ ...current, ...next }))}
-          onDeleteRoom={(room) => patchRoom(room, { isActive: false })}
+          onDeleteRoom={deleteRoom}
           onEditRoom={startEditRoom}
           onUpdateRoom={updateRoom}
           roomForm={roomForm}
           rooms={rooms}
         />
       )}
-
-      {activeFeature === "workingHours" && (
-        <ClinicWorkingHours
-          editingWorkingHour={editingWorkingHour}
-          loading={loading}
-          onCancelEditWorkingHour={() => setEditingWorkingHour(null)}
-          onCreateWorkingHour={createWorkingHour}
-          onDeleteWorkingHour={deleteWorkingHour}
-          onEditingWorkingHourChange={(next) => setEditingWorkingHour((current) => ({ ...current, ...next }))}
-          onEditWorkingHour={startEditWorkingHour}
-          onUpdateWorkingHour={updateWorkingHourDetails}
-          onWorkingHourFormChange={(next) => setWorkingHourForm((current) => ({ ...current, ...next }))}
-          workingHourForm={workingHourForm}
-          workingHours={workingHours}
-        />
-      )}
-
       {activeFeature === "stats" && (
         <AdminReportPanel
           onLoadPatientStatistics={loadPatientStatistics}
@@ -712,3 +578,5 @@ function downloadJson(payload, filename) {
   anchor.click();
   URL.revokeObjectURL(url);
 }
+
+

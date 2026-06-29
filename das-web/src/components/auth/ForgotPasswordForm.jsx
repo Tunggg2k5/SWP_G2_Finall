@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, getErrorMessage } from "../../utils/api.js";
 import { firstError, validateEmail, validatePassword } from "../../utils/validation.js";
 import { usePublicBootstrap } from "../../utils/usePublicBootstrap.js";
+import PasswordField from "../PasswordField.jsx";
 
 export default function ForgotPasswordForm() {
   const { clinic, loading: clinicLoading } = usePublicBootstrap();
@@ -129,7 +130,7 @@ export default function ForgotPasswordForm() {
             <span>Mật khẩu mới</span>
             <div className="input-icon">
               <LockKeyhole size={18} />
-              <input type="password" value={form.newPassword} onChange={(event) => update("newPassword", event.target.value)} required minLength={8} maxLength={72} />
+              <PasswordField value={form.newPassword} onChange={(event) => update("newPassword", event.target.value)} required minLength={8} maxLength={72} />
             </div>
           </label>
           {error && <div className="alert error">{error}</div>}

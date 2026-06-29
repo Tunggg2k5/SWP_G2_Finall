@@ -51,7 +51,6 @@ export function validateDate(value) {
   const date = parseDateInput(value);
   if (!date) return "Ngày không hợp lệ.";
   if (date < todayStart()) return "Ngày không được ở quá khứ.";
-  if (date.getDay() === 0) return "Phòng khám không làm việc vào Chủ nhật.";
   return "";
 }
 

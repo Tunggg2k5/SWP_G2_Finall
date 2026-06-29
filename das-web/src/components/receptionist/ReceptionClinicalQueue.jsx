@@ -2,10 +2,8 @@ import { CalendarDays, DoorOpen } from "lucide-react";
 import EmptyState from "../EmptyState.jsx";
 import StatusBadge from "../StatusBadge.jsx";
 import { formatTime } from "../../utils/format.js";
-import ReceptionAppointmentFilters from "./ReceptionAppointmentFilters.jsx";
 
 export default function ReceptionClinicalQueue({
-  appointmentSearch,
   date,
   dentistColumns,
   isLockedScheduleAppointment,
@@ -14,7 +12,6 @@ export default function ReceptionClinicalQueue({
   onMarkNoShow,
   queueSlots,
   rooms,
-  setAppointmentSearch,
   setDate
 }) {
   return (
@@ -37,12 +34,12 @@ export default function ReceptionClinicalQueue({
         ))}
       </div>
 
-      <ReceptionAppointmentFilters
-        date={date}
-        setDate={setDate}
-        appointmentSearch={appointmentSearch}
-        setAppointmentSearch={setAppointmentSearch}
-      />
+      <div className="toolbar-row">
+        <label className="field inline-field">
+          <span>Ngày</span>
+          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+        </label>
+      </div>
 
       {loading ? (
         <EmptyState title="Đang tải lịch khám" text="Hệ thống đang lấy dữ liệu mới nhất." />

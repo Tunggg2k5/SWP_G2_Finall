@@ -19,6 +19,7 @@ export const treatmentRecordSchema = z.object({
     })
     .optional(),
   diagnosis: z.string().max(2000).optional(),
+  medicalHistory: z.string().max(4000).optional(),
   treatmentResult: z.string().max(2000).optional(),
   treatmentNote: z.string().max(4000).optional(),
   treatmentPlan: z.string().max(4000).optional(),
@@ -49,7 +50,7 @@ export const followUpAppointmentSchema = z.object({
 });
 
 export const clinicalRoomStatusSchema = z.object({
-  status: z.enum(["available", "in_use", "cleaning", "maintenance", "unavailable"])
+  status: z.enum(["available", "unavailable"])
 });
 
 const performedChargeSchema = z.object({

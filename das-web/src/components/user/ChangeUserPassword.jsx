@@ -1,4 +1,5 @@
 import { LockKeyhole } from "lucide-react";
+import PasswordField from "../PasswordField.jsx";
 
 export default function ChangeUserPassword({ form, onCancel, onChange, onSubmit }) {
   return (
@@ -10,8 +11,7 @@ export default function ChangeUserPassword({ form, onCancel, onChange, onSubmit 
         </div>
         <label className="field">
           <span>Mật khẩu hiện tại</span>
-          <input
-            type="password"
+          <PasswordField
             value={form.currentPassword}
             onChange={(event) => onChange({ ...form, currentPassword: event.target.value })}
             required
@@ -19,8 +19,7 @@ export default function ChangeUserPassword({ form, onCancel, onChange, onSubmit 
         </label>
         <label className="field">
           <span>Mật khẩu mới</span>
-          <input
-            type="password"
+          <PasswordField
             value={form.newPassword}
             onChange={(event) => onChange({ ...form, newPassword: event.target.value })}
             required

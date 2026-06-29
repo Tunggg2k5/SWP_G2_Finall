@@ -27,6 +27,7 @@ const defaultRecordForm = {
   temperature: "",
   respiratoryRate: "",
   diagnosis: "",
+  medicalHistory: "",
   treatmentResult: "",
   treatmentNote: "",
   treatmentPlan: "",
@@ -261,6 +262,7 @@ export default function ClinicalDashboard() {
             treatmentNote: recordForm.treatmentNote,
             visitNumber: recordForm.visitNumber,
             diagnosis: recordForm.diagnosis,
+            medicalHistory: recordForm.medicalHistory,
             treatmentResult: recordForm.treatmentResult,
             treatmentPlan: recordForm.treatmentPlan,
             prescription: recordForm.prescription,
@@ -268,6 +270,7 @@ export default function ClinicalDashboard() {
           }
         : {
             diagnosis: recordForm.diagnosis,
+            medicalHistory: recordForm.medicalHistory,
             visitNumber: recordForm.visitNumber,
             treatmentResult: recordForm.treatmentResult,
             treatmentNote: recordForm.treatmentNote,
@@ -446,6 +449,7 @@ function normalizeTreatmentVisits(record) {
   const hasLegacyData = [
     record.vitalSigns,
     record.diagnosis,
+    record.medicalHistory,
     record.treatmentResult,
     record.treatmentNote,
     record.treatmentPlan,
@@ -457,6 +461,7 @@ function normalizeTreatmentVisits(record) {
         visitNumber: 1,
         vitalSigns: record.vitalSigns || {},
         diagnosis: record.diagnosis || "",
+        medicalHistory: record.medicalHistory || "",
         treatmentResult: record.treatmentResult || "",
         treatmentNote: record.treatmentNote || "",
         treatmentPlan: record.treatmentPlan || "",
@@ -477,6 +482,7 @@ function recordValuesFromVisit(visit, visitNumber) {
     temperature: visit?.vitalSigns?.temperature || "",
     respiratoryRate: visit?.vitalSigns?.respiratoryRate || "",
     diagnosis: visit?.diagnosis || "",
+    medicalHistory: visit?.medicalHistory || "",
     treatmentResult: visit?.treatmentResult || "",
     treatmentNote: visit?.treatmentNote || "",
     treatmentPlan: visit?.treatmentPlan || "",

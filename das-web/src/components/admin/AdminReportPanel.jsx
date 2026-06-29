@@ -11,10 +11,6 @@ export default function AdminReportPanel({
   revenueReport,
   stats
 }) {
-  const paidTotal = revenueReport?.summary?.find((item) => item._id === "paid")?.total || 0;
-  const partialTotal = revenueReport?.summary?.find((item) => item._id === "partial")?.total || 0;
-  const unpaidTotal = revenueReport?.summary?.find((item) => item._id === "unpaid")?.total || 0;
-
   function loadAll() {
     onLoadRevenueReport();
     onLoadPatientStatistics();
@@ -23,10 +19,7 @@ export default function AdminReportPanel({
   return (
     <>
       <section className="metrics-grid">
-        <AdminMetric icon={BarChart3} label="Doanh thu đã thu" value={formatMoney(stats?.revenue || 0)} />
-        <AdminMetric icon={ReceiptText} label="Đã thu trong kỳ" value={formatMoney(paidTotal)} />
-        <AdminMetric icon={ReceiptText} label="Trả 1 phần" value={formatMoney(partialTotal)} />
-        <AdminMetric icon={ReceiptText} label="Chưa thu trong kỳ" value={formatMoney(unpaidTotal)} />
+        <AdminMetric icon={BarChart3} label="Doanh thu" value={formatMoney(stats?.revenue || 0)} />
         <AdminMetric icon={UsersRound} label="Bệnh nhân mới" value={patientStatistics?.newPatients ?? stats?.newPatientCount ?? 0} />
         <AdminMetric icon={UsersRound} label="Bệnh nhân quay lại" value={patientStatistics?.returningPatients ?? stats?.returningPatientCount ?? 0} />
       </section>

@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+﻿import { Fragment } from "react";
 import { Stethoscope } from "lucide-react";
 import EmptyState from "../EmptyState.jsx";
 import StatusBadge from "../StatusBadge.jsx";
@@ -37,11 +37,12 @@ export default function ClinicalWorkSchedule({
                 <StatusBadge value={room.status} />
                 {user?.role === "nurse" && (
                   <span className="room-chip-actions">
-                    <button className="button tiny" type="button" onClick={() => onSetRoomStatus(room._id, "cleaning")}>
-                      Vệ sinh
-                    </button>
-                    <button className="button tiny secondary" type="button" onClick={() => onSetRoomStatus(room._id, "available")}>
-                      Sẵn sàng
+                    <button
+                      className="button tiny secondary"
+                      type="button"
+                      onClick={() => onSetRoomStatus(room._id, room.status === "available" ? "unavailable" : "available")}
+                    >
+                      {room.status === "available" ? "Chưa sẵn sàng" : "Sẵn sàng"}
                     </button>
                   </span>
                 )}
@@ -130,3 +131,4 @@ export default function ClinicalWorkSchedule({
     </section>
   );
 }
+

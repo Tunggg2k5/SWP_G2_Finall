@@ -1,4 +1,4 @@
-import { getInheritanceChain, getRoleHierarchyList, ROLE_HIERARCHY } from "../config/roleHierarchy.js";
+﻿import { getInheritanceChain, getRoleHierarchyList, ROLE_HIERARCHY } from "../config/roleHierarchy.js";
 import * as adminRepository from "../repository/adminRepository.js";
 import { hashPassword } from "../utils/password.js";
 import {
@@ -64,11 +64,7 @@ function validateClinicSessionWindow(startTime, endTime) {
   }
 }
 
-function validateWorkday(date) {
-  if (date.getDay() === 0) {
-    throwHttpError("Phòng khám nghỉ Chủ nhật.", 400);
-  }
-}
+function validateWorkday(_date) {}
 
 function formatRoleName(role) {
   const labels = {
@@ -146,11 +142,6 @@ async function validateStaffScheduleAssignment({ userId, roomId, workDate, start
   if (!room) {
     throwHttpError("Không tìm thấy phòng khám.", 404);
   }
-
-  if (!room.isActive || ["maintenance", "unavailable"].includes(room.status)) {
-    throwHttpError("Phòng khám đang không khả dụng để xếp lịch.", 409);
-  }
-
   const roomConflicts = await adminRepository.findRoomScheduleConflicts({
     ...overlapQuery,
     room: roomId
@@ -462,9 +453,20 @@ export async function updateDentalService(serviceId, body) {
 }
 
 export async function deactivateDentalService(serviceId) {
-  const service = await adminRepository.updateDentalService(serviceId, { isActive: false });
+  const service = await adminRepository.deleteDentalService(serviceId);
   if (!service) throwHttpError("Không tìm thấy dịch vụ.", 404);
   return service;
+}
+
+async function validateRoomAssignments(data, excludeRoomId) {
+  if (data.assignedDentist) {
+    const conflict = await adminRepository.findClinicRoomAssignmentConflict("assignedDentist", data.assignedDentist, excludeRoomId);
+    if (conflict) throwHttpError("Bác sĩ này đã được gán vào phòng khám khác.", 409);
+  }
+  if (data.assignedNurse) {
+    const conflict = await adminRepository.findClinicRoomAssignmentConflict("assignedNurse", data.assignedNurse, excludeRoomId);
+    if (conflict) throwHttpError("Y tá này đã được gán vào phòng khám khác.", 409);
+  }
 }
 
 export async function createClinicRoom(body) {
@@ -474,13 +476,23 @@ export async function createClinicRoom(body) {
     throwHttpError("Tên phòng khám đã tồn tại.", 409);
   }
 
+  await validateRoomAssignments(data);
+
   const room = await adminRepository.createClinicRoom(data);
   await adminRepository.populateClinicRoom(room);
   return room;
 }
 
 export async function updateClinicRoom(roomId, body) {
-  const room = await adminRepository.updateClinicRoom(roomId, updateClinicRoomSchema.parse(body));
+  const data = updateClinicRoomSchema.parse(body);
+  await validateRoomAssignments(data, roomId);
+  const room = await adminRepository.updateClinicRoom(roomId, data);
+  if (!room) throwHttpError("Không tìm thấy phòng khám.", 404);
+  return room;
+}
+
+export async function deleteClinicRoom(roomId) {
+  const room = await adminRepository.deleteClinicRoom(roomId);
   if (!room) throwHttpError("Không tìm thấy phòng khám.", 404);
   return room;
 }
@@ -491,3 +503,5 @@ export async function updateReviewVisibility(reviewId, body) {
   if (!review) throwHttpError("Không tìm thấy đánh giá.", 404);
   return review;
 }
+
+
